@@ -1,0 +1,8 @@
+pydantic
+openai
+requests
+obsws_python
+sounddevice
+feedparser
+tweepy
+pytchat
