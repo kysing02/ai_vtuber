@@ -1,9 +1,9 @@
 from openai_adapter import OpenAIAdapter
-from world.WorldTime import WorldTime
+from world_time import WorldTime
 
 if __name__ == "__main__":
     adapter = OpenAIAdapter()
-    worldtime = WorldTime.create_real_time()
+    worldtime = WorldTime()
     sample_system_text = """あなたはコラショという高校生です．今の行動によって，時間がどれぐらい進みましたかを推測して下さい。正しい答えはなく，自由です。ただし，他のパラメータを参考してください。答えを{time: {hours:, mins:}}の形で答えて下さい. 0を入れても構いません{理由: }"""
     sample_user_text = f"""
     今日の予定は：
