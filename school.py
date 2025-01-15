@@ -10,13 +10,13 @@ class TimeTable(BaseModel):
     thursday: list[str]
     friday: list[str]
 
-class Event(BaseModel):
+class SchoolEvent(BaseModel):
     month: int
     day: int
     description: str
 
-class EventList(BaseModel):
-    event: list[Event]
+class SchoolEventList(BaseModel):
+    event: list[SchoolEvent]
 
 class School:
     def __init__(self, world_time: WorldTime, adapter: OpenAIAdapter):
@@ -65,7 +65,7 @@ class School:
         """
         year_schedule = self.adapter.create_structured_output([self.adapter.create_message("assistant", system_message),
                                                                self.adapter.create_message("user", f"{year}年の行事：\n" + year_schedule_draft)],
-                                                               EventList)
+                                                               SchoolEventList)
         with open(f"storage/year_schedule/school_events_{year}.json", "w", encoding="utf-8") as f:
             f.write(year_schedule.model_dump_json(indent=4))
         next_year_schedule = CallbackSchedule(datetime=datetime(self.world_time.current_time.year + 1, 4, 1, 0, 0), 
@@ -86,7 +86,11 @@ class School:
         timetable: TimeTable = self.adapter.create_structured_output(messages, TimeTable)
         with open(f"storage/year_schedule/school_timetable_{year}.json", "w", encoding="utf-8") as f:
             f.write(timetable.model_dump_json(indent=4))
-
+    
+    @staticmethod
+    def get_timetable_str(year):
+        with open(f"")
+        
 if __name__ == "__main__":
     adapter = OpenAIAdapter()
     school = School(adapter=adapter, world_time=WorldTime(adapter))
