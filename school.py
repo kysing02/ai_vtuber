@@ -2,6 +2,8 @@ from pydantic import BaseModel
 from world_time import WorldTime, CallbackSchedule
 from openai_adapter import OpenAIAdapter
 from datetime import datetime
+import json
+import utils.common_utils as utils
 
 class TimeTable(BaseModel):
     monday: list[str]
@@ -87,10 +89,23 @@ class School:
         with open(f"storage/year_schedule/school_timetable_{year}.json", "w", encoding="utf-8") as f:
             f.write(timetable.model_dump_json(indent=4))
     
-    @staticmethod
-    def get_timetable_str(year):
-        with open(f"")
+    def get_timetable_str(self, year: int, weekday: int) -> str:
+        with open(f"storage/year_schedule/school_timetable_{year}.json", "r", encoding="utf-8") as f:
+            timetable_json = json.load(f)
+        with open(f"storage/year_schedule/school_timetable_template.txt", "r", encoding="utf-8") as f:
+            timetable_template = f.read()
+        weekday_name = utils.decapitalize(utils.get_weekday_name(weekday))
+        replacements = {
+            "{0}": weekday_name,
+            "{1}": timetable_json[weekday_name][0],
+            "{2}": timetable_json[weekday_name][1],
+            "{3}": timetable_json[weekday_name][2],
+            "{4}": timetable_json[weekday_name][3]
+        }
+        timetable = utils.replace(replacements, timetable_template)
+        return timetable
         
 if __name__ == "__main__":
     adapter = OpenAIAdapter()
     school = School(adapter=adapter, world_time=WorldTime(adapter))
+    print(school.get_timetable_str(2025, 2))

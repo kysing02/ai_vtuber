@@ -7,13 +7,128 @@
         },
         {
             "month": 4,
+            "day": 20,
+            "description": "クラブ活動紹介"
+        },
+        {
+            "month": 5,
+            "day": 10,
+            "description": "遠足（行き先：近くの公園）"
+        },
+        {
+            "month": 6,
+            "day": 6,
+            "description": "中間試験"
+        },
+        {
+            "month": 6,
+            "day": 20,
+            "description": "体育祭（競技：リレー、玉入れ、応援合戦）"
+        },
+        {
+            "month": 7,
+            "day": 8,
+            "description": "学校見学会（新入生対象）"
+        },
+        {
+            "month": 7,
+            "day": 22,
+            "description": "夏休み前の集会"
+        },
+        {
+            "month": 8,
+            "day": 30,
+            "description": "夏休み明け集会"
+        },
+        {
+            "month": 9,
+            "day": 5,
+            "description": "文化祭準備開始"
+        },
+        {
+            "month": 9,
             "day": 29,
-            "description": "昭和の日"
+            "description": "文化祭"
+        },
+        {
+            "month": 10,
+            "day": 10,
+            "description": "秋の遠足（行き先：歴史的な名所）"
+        },
+        {
+            "month": 11,
+            "day": 1,
+            "description": "期末試験"
+        },
+        {
+            "month": 11,
+            "day": 18,
+            "description": "学校公開日"
+        },
+        {
+            "month": 12,
+            "day": 3,
+            "description": "音楽発表会"
+        },
+        {
+            "month": 12,
+            "day": 22,
+            "description": "冬休み前の集会"
+        },
+        {
+            "month": 1,
+            "day": 9,
+            "description": "冬休み明け集会"
+        },
+        {
+            "month": 1,
+            "day": 30,
+            "description": "スポーツ大会（各種競技）"
+        },
+        {
+            "month": 2,
+            "day": 6,
+            "description": "卒業式リハーサル"
+        },
+        {
+            "month": 3,
+            "day": 3,
+            "description": "卒業式"
+        },
+        {
+            "month": 3,
+            "day": 15,
+            "description": "新入生オリエンテーション"
+        },
+        {
+            "month": 3,
+            "day": 26,
+            "description": "学年末試験"
+        },
+        {
+            "month": 1,
+            "day": 1,
+            "description": "元日"
+        },
+        {
+            "month": 1,
+            "day": 8,
+            "description": "成人の日"
+        },
+        {
+            "month": 2,
+            "day": 11,
+            "description": "建国記念の日"
+        },
+        {
+            "month": 3,
+            "day": 21,
+            "description": "春分の日"
         },
         {
             "month": 4,
-            "day": 20,
-            "description": "クラブ活動紹介"
+            "day": 29,
+            "description": "昭和の日"
         },
         {
             "month": 5,
@@ -31,39 +146,14 @@
             "description": "こどもの日"
         },
         {
-            "month": 5,
-            "day": 10,
-            "description": "遠足（行き先：自然公園）"
-        },
-        {
-            "month": 6,
-            "day": 5,
-            "description": "中間試験"
-        },
-        {
-            "month": 6,
-            "day": 20,
-            "description": "体育祭（競技：リレー、綱引き、ダンス）"
-        },
-        {
             "month": 7,
-            "day": 7,
-            "description": "学校見学会（新入生対象）"
-        },
-        {
-            "month": 7,
-            "day": 24,
-            "description": "夏休み前の集会"
-        },
-        {
-            "month": 8,
-            "day": 26,
-            "description": "夏休み明け集会"
+            "day": 16,
+            "description": "海の日"
         },
         {
             "month": 9,
-            "day": 5,
-            "description": "文化祭準備開始"
+            "day": 19,
+            "description": "敬老の日"
         },
         {
             "month": 9,
@@ -71,19 +161,9 @@
             "description": "秋分の日"
         },
         {
-            "month": 9,
-            "day": 28,
-            "description": "文化祭（テーマ：未来の学校）"
-        },
-        {
             "month": 10,
-            "day": 15,
-            "description": "秋の遠足（行き先：博物館）"
-        },
-        {
-            "month": 11,
-            "day": 1,
-            "description": "期末試験"
+            "day": 10,
+            "description": "体育の日"
         },
         {
             "month": 11,
@@ -92,58 +172,13 @@
         },
         {
             "month": 11,
-            "day": 10,
-            "description": "学校公開日"
+            "day": 23,
+            "description": "勤労感謝の日"
         },
         {
             "month": 12,
-            "day": 3,
-            "description": "音楽発表会"
-        },
-        {
-            "month": 12,
-            "day": 19,
-            "description": "冬休み前の集会"
-        },
-        {
-            "month": 1,
-            "day": 1,
-            "description": "元日"
-        },
-        {
-            "month": 1,
-            "day": 8,
-            "description": "冬休み明け集会"
-        },
-        {
-            "month": 1,
-            "day": 20,
-            "description": "スポーツ大会（サッカー、バスケットボール）"
-        },
-        {
-            "month": 2,
-            "day": 11,
-            "description": "建国記念の日"
-        },
-        {
-            "month": 2,
-            "day": 7,
-            "description": "卒業式リハーサル"
-        },
-        {
-            "month": 3,
-            "day": 3,
-            "description": "卒業式"
-        },
-        {
-            "month": 3,
-            "day": 10,
-            "description": "新入生オリエンテーション"
-        },
-        {
-            "month": 3,
-            "day": 22,
-            "description": "学年末試験"
+            "day": 23,
+            "description": "天皇誕生日"
         }
     ]
 }
