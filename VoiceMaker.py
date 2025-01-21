@@ -5,7 +5,10 @@ from openai_adapter import OpenAIAdapter
 import requests
 import soundfile
 import io
-
+from pathlib import Path
+from style_bert_vits2.nlp import bert_models
+from style_bert_vits2.constants import Languages
+from style_bert_vits2.tts_model import TTSModel
 
 class VoiceIO(TypedDict):
     data:np.ndarray
@@ -22,6 +25,11 @@ class VoiceMaker:
     @staticmethod
     def make_voice_voicevox(text: str) -> VoiceIO:
         adapter = VoicevoxAdapter()
+        return adapter.get_voice(text)
+
+    @staticmethod
+    def make_voice_style_bert_vits2(text: str) -> VoiceIO:
+        adapter = StyleBertVits2Adapter()
         return adapter.get_voice(text)
 
 class VoicevoxAdapter:
@@ -54,6 +62,30 @@ class VoicevoxAdapter:
         data, sample_rate = soundfile.read(audio_stream)
         return VoiceIO(data=data, sample_rate=sample_rate)
 
+class StyleBertVits2Adapter:
+    def __init__(self):
+        # ダウンロードされたデフォルトモデルのディレクトリ
+        model_file = "jvnv-F1-jp/jvnv-F1-jp_e160_s14000.safetensors"
+        config_file = "jvnv-F1-jp/config.json"
+        style_file = "jvnv-F1-jp/style_vectors.npy"
+
+        # BERTモデルをロード（ローカルに手動でダウンロードする必要はありません）
+        bert_models.load_model(Languages.JP, "ku-nlp/deberta-v2-large-japanese-char-wwm")
+        bert_models.load_tokenizer(Languages.JP, "ku-nlp/deberta-v2-large-japanese-char-wwm")
+
+        # モデルを設定
+        assets_root = Path("model_assets")
+        self.model = TTSModel(
+            model_path=assets_root / model_file,
+            config_path=assets_root / config_file,
+            style_vec_path=assets_root / style_file,
+            device="cuda"
+        )
+
+    def get_voice(self, text: str) -> VoiceIO:
+        sr, audio = self.model.infer(text=text)
+        return VoiceIO(data=audio, sample_rate=sr)
+    
 if __name__ == "__main__":
     voice_io = VoiceMaker.make_voice_voicevox("人工音声のテストです。")
 

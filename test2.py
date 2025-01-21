@@ -1,16 +1,11 @@
-import os
-import dotenv
-from openai import OpenAI
+from transformers import pipeline
+# Load the TTS pipeline with the fishaudio model
+tts = pipeline("text-to-speech", model="fishaudio/fish-speech-1.5")
 
-dotenv.load_dotenv()
+# Generate speech from text
+text = "こんにちは！Fish Speechのテストです"
+output = tts(text)
 
-client = OpenAI(api_key=os.getenv("OPEN_AI_KEY"))
-# Send a streaming request
-stream = client.chat.completions.create(
-    model="gpt-4o-mini",
-    messages=[{"role": "user", "content": "say one to hundred"}],
-    stream=True,
-)
-for chunk in stream:
-    if chunk.choices[0].delta.content is not None:
-        print(chunk.choices[0].delta.content, end="", flush=True)
+# Save the audio output to a file
+with open("test.wav", "wb") as f:
+    f.write(output["audio"])
