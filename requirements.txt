@@ -8,5 +8,3 @@ tweepy
 pytchat
 numpy
 soundfile
-transformers
-datasets

@@ -31,6 +31,11 @@ class VoiceMaker:
     def make_voice_style_bert_vits2(text: str) -> VoiceIO:
         adapter = StyleBertVits2Adapter()
         return adapter.get_voice(text)
+    
+    @staticmethod
+    def make_voice_fish_audio(text: str) -> VoiceIO:
+        adapter = FishAudioAdapter()
+        return adapter.get_voice(text)
 
 class VoicevoxAdapter:
     URL = 'http://127.0.0.1:50021/'
@@ -85,7 +90,38 @@ class StyleBertVits2Adapter:
     def get_voice(self, text: str) -> VoiceIO:
         sr, audio = self.model.infer(text=text)
         return VoiceIO(data=audio, sample_rate=sr)
-    
+
+class FishAudioAdapter:
+    URL = 'http://127.0.0.1:7000/'
+    def __init__(self) -> None:
+        pass
+    def __create_tts(self, query_data) -> bytes:
+        headers = {"accept": "audio/wav", "Content-Type":"application/json"}
+        res = requests.post(self.URL+'v1/tts', json=query_data, headers=headers)
+        print(res.status_code)
+        return res.content
+    def get_voice(self, text: str) -> VoiceIO:
+        query_data = {
+            "text": text,
+            "chunk_length": 200,
+            "format": "wav",
+            "references": [],
+            "reference_id": "hina", # 「空崎ヒナ」のreference_id
+            "seed": None,
+            "use_memory_cache": "off",
+            "normalize": True,
+            "streaming": False,
+            "max_new_tokens": 1024,
+            "top_p": 0.7,
+            "repetition_penalty": 1.2,
+            "temperature": 0.7
+        }
+        audio_bytes = self.__create_tts(query_data)
+        audio_stream = io.BytesIO(audio_bytes)
+        data, sample_rate = soundfile.read(audio_stream)
+        return VoiceIO(data=data, sample_rate=sample_rate)
+        
+
 if __name__ == "__main__":
     voice_io = VoiceMaker.make_voice_voicevox("人工音声のテストです。")
 
