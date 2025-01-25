@@ -1,10 +1,10 @@
 import subprocess
-from openai_adapter import OpenAIAdapter
+from scripts.adapters.openai_adapter import OpenAIAdapter
 from time import sleep
 import signal
 import os
-from VoiceMaker import VoiceMaker
-from play_sound import PlaySound
+from scripts.sound.VoiceMaker import VoiceMaker
+from scripts.sound.play_sound import PlaySound
 
 voice_maker = VoiceMaker()
 play_sound = PlaySound()

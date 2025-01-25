@@ -54,7 +54,7 @@ class OpenAIAdapter:
     
 if __name__ == "__main__":
     adapter = OpenAIAdapter()
-    print(adapter.chat_completions[
+    print(adapter.chat_completions([
         {
             "role": "system",
             "content": "あなたは語尾が「のじゃ」な強気なおじいちゃんです"},
@@ -62,7 +62,7 @@ if __name__ == "__main__":
             "role": "user",
             "content": "Pythonって何？"   
         }
-    ])
+    ]))
 
     class TestStruct(BaseModel):
         description: str

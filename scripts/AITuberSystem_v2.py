@@ -1,9 +1,9 @@
 import os
-from usecases.talker import Talker
-from obs_adapter import OBSAdapter
-from VoiceMaker import VoiceIO, VoiceMaker
-from youtube_comment_adapter import YoutubeCommentAdapter
-from play_sound import PlaySound
+from scripts.usecases.talker import Talker
+from scripts.adapters.obs_adapter import OBSAdapter
+from scripts.adapters.youtube_comment_adapter import YoutubeCommentAdapter
+from scripts.sound.VoiceMaker import VoiceIO, VoiceMaker
+from scripts.sound.play_sound import PlaySound
 from dotenv import load_dotenv
 import time
 load_dotenv(override=True)

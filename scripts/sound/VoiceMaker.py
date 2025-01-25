@@ -1,7 +1,7 @@
 import json
 from typing import TypedDict
 import numpy as np
-from openai_adapter import OpenAIAdapter
+from scripts.adapters.openai_adapter import OpenAIAdapter
 import requests
 import soundfile
 import io

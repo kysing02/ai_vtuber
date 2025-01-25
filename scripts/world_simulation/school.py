@@ -1,9 +1,9 @@
 from pydantic import BaseModel
-from world_time import WorldTime, CallbackSchedule
-from openai_adapter import OpenAIAdapter
+from scripts.world_simulation.world_time import WorldTime, CallbackSchedule
+from scripts.adapters.openai_adapter import OpenAIAdapter
 from datetime import datetime
 import json
-import utils.common_utils as utils
+import scripts.utils.helpers as utils
 
 class TimeTable(BaseModel):
     monday: list[str]

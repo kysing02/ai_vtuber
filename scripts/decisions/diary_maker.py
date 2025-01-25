@@ -1,7 +1,7 @@
 from datetime import datetime
-from daily_event_maker import DailyEventMaker
-from hatena_entry_adapter import HatenaEntryAdapter
-from openai_adapter import OpenAIAdapter
+from scripts.world_simulation.daily_event_maker import DailyEventMaker
+from scripts.adapters.hatena_entry_adapter import HatenaEntryAdapter
+from scripts.adapters.openai_adapter import OpenAIAdapter
 
 
 class DiaryMaker:

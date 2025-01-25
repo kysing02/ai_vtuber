@@ -1,6 +1,5 @@
 import random
-from openai_adapter import OpenAIAdapter
-
+from scripts.adapters.openai_adapter import OpenAIAdapter
 class Talker:
     def __init__(self):
         self.talk_history: list[dict[str, str]] = []

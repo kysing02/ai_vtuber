@@ -1,6 +1,6 @@
 import random
 from pydantic import BaseModel
-from openai_adapter import OpenAIAdapter
+from scripts.adapters.openai_adapter import OpenAIAdapter
 
 
 class Event(BaseModel):

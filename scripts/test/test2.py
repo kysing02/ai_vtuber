@@ -2,9 +2,9 @@ import discord
 from discord.ext import commands
 import asyncio
 import pyaudio
-from VoiceMaker import VoiceMaker
-from play_sound import PlaySound
-from openai_adapter import OpenAIAdapter
+from scripts.sound.VoiceMaker import VoiceMaker
+from scripts.sound.play_sound import PlaySound
+from scripts.adapters.openai_adapter import OpenAIAdapter
 import subprocess
 from time import sleep
 from dotenv import load_dotenv

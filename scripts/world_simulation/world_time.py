@@ -2,11 +2,11 @@ import sys
 from pydantic import BaseModel
 from datetime import datetime, timedelta
 from typing import Callable, List
-from openai_adapter import OpenAIAdapter
+from scripts.adapters.openai_adapter import OpenAIAdapter
 
 class WorldTime:
     def __init__(self,
-                 adapter: OpenAIAdapter,
+                 adapter: OpenAIAdapter=OpenAIAdapter(),
                  start_time: datetime=datetime(2025, 4, 1, 0, 0), 
                  time_step: timedelta=timedelta(minutes=1.0),
                  ):
