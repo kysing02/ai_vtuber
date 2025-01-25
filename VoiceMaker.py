@@ -123,7 +123,7 @@ class FishAudioAdapter:
         
 
 if __name__ == "__main__":
-    voice_io = VoiceMaker.make_voice_voicevox("人工音声のテストです。")
+    voice_io = VoiceMaker.make_voice_style_bert_vits2("人工音声のテストです。")
 
     with open("test.wav", "wb") as f:
         # バイトデータとrateからwavファイルを作成
