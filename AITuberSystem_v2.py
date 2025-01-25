@@ -23,7 +23,7 @@ class AITuberSystem_v2:
             speak_list = self.split_text(character_speak)
             print(speak_list)
             for speak in speak_list:
-                voice: VoiceIO = self.voice_maker.make_voice_fish_audio(speak)
+                voice: VoiceIO = self.voice_maker.make_voice_style_bert_vits2(speak)
                 self.obs_adapter.set_question(comment)
                 self.obs_adapter.set_answer(speak)
                 self.play_sound.play_sound(voice)
