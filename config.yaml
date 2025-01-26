@@ -1,0 +1,7 @@
+world_simulations:
+  # Inform the system whether to use real world time or not
+  use_realtime: false
+  # The start time for the simulated time
+  start_time: "2025-04-01 00:00:00"
+  # How fast simulated time (in minutes) should pass for each second.
+  time_step: 1

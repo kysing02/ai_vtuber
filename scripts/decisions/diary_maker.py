@@ -6,6 +6,7 @@ from scripts.adapters.openai_adapter import OpenAIAdapter
 
 class DiaryMaker:
     def __init__(self):
+        3
         with open("storage/diary_maker_prompt.txt", "r", encoding="utf-8") as f:
             self.system_prompt = f.read()
     

@@ -1,4 +1,5 @@
-import sys
+import threading
+import time
 from pydantic import BaseModel
 from datetime import datetime, timedelta
 from typing import Callable, List
@@ -6,7 +7,7 @@ from scripts.adapters.openai_adapter import OpenAIAdapter
 
 class WorldTime:
     def __init__(self,
-                 adapter: OpenAIAdapter=OpenAIAdapter(),
+                 adapter: OpenAIAdapter,
                  start_time: datetime=datetime(2025, 4, 1, 0, 0), 
                  time_step: timedelta=timedelta(minutes=1.0),
                  ):
@@ -15,7 +16,18 @@ class WorldTime:
         self.time_step = time_step
         self.callback_schedules: List[CallbackSchedule] = []
         print(f"ワールドの時間が{start_time}に設定した")
+        self.__start_time_thread()
     
+    def __start_time_thread(self):
+        """他のスレッドで時間モニタリングを開始する"""
+        threading.Thread(target=self.__proceed_time_in_background, daemon=True).start()
+
+    def __proceed_time_in_background(self):
+        """毎秒ごとに時間を更新する"""
+        while True:
+            self.proceed_time(timedelta(seconds=1))
+            time.sleep(1)
+
     def get_time_str(self) -> str:
         return self.current_time.strftime("%Y/%m/%d %H時%M分")
     
@@ -26,6 +38,7 @@ class WorldTime:
             steps -= timedelta(minutes=1)
             self.current_time += timedelta(minutes=1)
             self.__check_timer()
+        print(f"現在時間：{self.get_time_str()}")
     
     def add_timer(self, datetime: datetime, callback: Callable):
         newCallbackSchedule = CallbackSchedule(datetime=datetime, callback=callback)
@@ -39,17 +52,18 @@ class WorldTime:
                 self.callback_schedules.pop(0)
                 continue
             else:
-                break      
+                break
 
 class CallbackSchedule(BaseModel):
     datetime: datetime
     callback: Callable
 
 if __name__ == "__main__":
-    worldTime = WorldTime()
-    # print(worldTime.get_time_str())
+    adapter = OpenAIAdapter()
+    worldTime = WorldTime(adapter)
+    worldTime.add_timer(datetime=datetime(2025, 4, 1, 0, 10), callback=lambda :print("Hello 10 今は：", worldTime.get_time_str()))
+    time.sleep(5)
+    worldTime.proceed_time(timedelta(minutes=30))
+    input("Enterキーを押して終了する。。。\n")
     # worldTime.proceed_time(timedelta(hours=1, minutes=30))
-    # print(worldTime.get_time_str())
-    # worldTime.add_timer(datetime=datetime(2025, 1, 1, 1, 35), callback=lambda :print("Hello 35"))
     # worldTime.proceed_time(timedelta(minutes=25))
-    # print(worldTime.get_time_str())

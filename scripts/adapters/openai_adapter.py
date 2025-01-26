@@ -1,9 +1,7 @@
 import os
 from typing import Literal, TypedDict, Type
-import dotenv
 from openai import OpenAI
 from pydantic import BaseModel
-dotenv.load_dotenv()
 
 class Message(TypedDict):
     role: Literal["system", "user", "assistant"]
@@ -53,6 +51,9 @@ class OpenAIAdapter:
         return res.content
     
 if __name__ == "__main__":
+    import dotenv
+    dotenv.load_dotenv()
+    
     adapter = OpenAIAdapter()
     print(adapter.chat_completions([
         {
