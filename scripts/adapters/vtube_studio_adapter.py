@@ -3,8 +3,6 @@ import json
 import websockets
 import uuid
 import os
-from dotenv import load_dotenv
-load_dotenv()
 
 class VTSAdapter:
     def __init__(self, host="localhost", port=8001):
@@ -100,4 +98,6 @@ async def main():
     await vts_adapter.close()
 
 if __name__ == "__main__":
+    from dotenv import load_dotenv
+    load_dotenv()
     asyncio.run(main())
