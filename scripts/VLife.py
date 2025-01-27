@@ -1,6 +1,4 @@
 # VLifeシステムの実装
-import yaml
-import sys
 from dotenv import load_dotenv
 import scripts.utils.helpers as helpers
 from scripts.adapters.openai_adapter import OpenAIAdapter
@@ -28,7 +26,8 @@ class VLife:
         # 一日の計画を立てる。一日の計画の更新は自動的ではなく、コマンド：起きるところから始める
         self.daily_planner.make_daily_plan(day=self.world_time.current_time.day)
         # システムを開始
-        while True:       
+        while True:
+            self.actions.take_action()
 
 if __name__ == '__main__':
     load_dotenv()

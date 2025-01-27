@@ -48,7 +48,6 @@ class Talker:
         response = self.chat(prompt)
         print(response)
         return response
-    
 
 if __name__ == "__main__":
     talker = Talker()

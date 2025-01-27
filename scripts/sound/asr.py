@@ -17,7 +17,7 @@ def main():
     parser.add_argument("--language", default="ja", help="Language for transcription (e.g., 'ja' for Japanese).")
     parser.add_argument("--energy_threshold", default=1000,
                         help="Energy level for mic to detect.", type=int)
-    parser.add_argument("--record_timeout", default=1,
+    parser.add_argument("--record_timeout", default=3,
                         help="How real time the recording is in seconds.", type=float)
     parser.add_argument("--phrase_timeout", default=5,
                         help="Timeout between recordings.", type=float)
@@ -33,6 +33,8 @@ def main():
     recorder.energy_threshold = args.energy_threshold
     # Definitely do this, dynamic energy compensation lowers the energy threshold dramatically to a point where the SpeechRecognizer never stops recording.
     recorder.dynamic_energy_threshold = False
+    # Ignore empty string or weird output
+    ignore_messages = ["ご視聴ありがとうございました", ""]
 
     # Important for linux users.
     # Prevents permanent application hang and crash by using the wrong Microphone
@@ -81,7 +83,8 @@ def main():
     # We could do this manually but SpeechRecognizer provides a nice helper.
     recorder.listen_in_background(source, record_callback, phrase_time_limit=args.record_timeout)
 
-    # Model loaded.
+    # Model loaded. Send ready signal
+    print("ready")
     while True:
         try:
             now = datetime.utcnow()
@@ -111,7 +114,8 @@ def main():
                 # If we detected a pause between recordings, add a new item to our transcription.
                 # Otherwise edit the existing one.
                 # if phrase_complete:
-                transcription.append(text)
+                if text not in ignore_messages:
+                    transcription.append(text)
                 # else:
                 #     if len(transcription) > 1:
                 #         transcription[-1] = text
@@ -128,7 +132,7 @@ def main():
                     # Flush stdout.
                     print('', end='', flush=True)
                 # Infinite loops are bad for processors, must sleep.
-                sleep(0.25)
+                sleep(0.1)
                 
         except KeyboardInterrupt:
             break
