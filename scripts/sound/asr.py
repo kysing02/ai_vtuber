@@ -9,6 +9,11 @@ from datetime import datetime, timedelta
 from queue import Queue
 from time import sleep
 from sys import platform
+# Whisperモデルで動かす
+from openai import OpenAI
+import tempfile
+import soundfile as sf
+import json
 
 def main():
     parser = argparse.ArgumentParser()
@@ -21,6 +26,8 @@ def main():
                         help="How real time the recording is in seconds.", type=float)
     parser.add_argument("--phrase_timeout", default=5,
                         help="Timeout between recordings.", type=float)
+    parser.add_argument("--use_api", type=bool,
+                        help="Use OpenAI Whisper API to process ASR")
     args = parser.parse_args()
     # Time to wait for a new response to come
     wait_time = 0.3
@@ -34,7 +41,7 @@ def main():
     # Definitely do this, dynamic energy compensation lowers the energy threshold dramatically to a point where the SpeechRecognizer never stops recording.
     recorder.dynamic_energy_threshold = False
     # Ignore empty string or weird output
-    ignore_messages = ["ご視聴ありがとうございました", ""]
+    ignore_messages = ["ご視聴ありがとうございました", "", "ご視聴ありがとうございました。"]
 
     # Important for linux users.
     # Prevents permanent application hang and crash by using the wrong Microphone
@@ -45,17 +52,20 @@ def main():
                 source = sr.Microphone(sample_rate=16000, device_index=index)
                 break
     else:
-        # source = sr.Microphone(sample_rate=16000)
+        source = sr.Microphone(sample_rate=16000)
         # Modification to use CABLE Input as microphone
-        mic_name = "CABLE Output"
-        for index, name in enumerate(sr.Microphone.list_microphone_names()):
-            if mic_name in name:
-                source = sr.Microphone(sample_rate=16000, device_index=index)
-                break
+        # mic_name = "CABLE Output"
+        # for index, name in enumerate(sr.Microphone.list_microphone_names()):
+        #     if mic_name in name:
+        #         source = sr.Microphone(sample_rate=16000, device_index=index)
+        #         break
 
-    # Load / Download model
-    model_path = args.model
-    model = WhisperModel(model_path)
+    if (args.use_api):
+        client = OpenAI()
+    else:
+        # Load / Download model
+        model_path = args.model
+        model = WhisperModel(model_path)
 
     record_timeout = args.record_timeout
     phrase_timeout = args.phrase_timeout
@@ -108,8 +118,12 @@ def main():
                 audio_np = np.frombuffer(audio_data, dtype=np.int16).astype(np.float32) / 32768.0
 
                 # Read the transcription.
-                segments, _ = model.transcribe(audio_np, language=args.language)
-                text = "".join([segment.text for segment in segments]).strip()
+                if (args.use_api):
+                    text = transcribe_with_openai(client, audio_np)
+                else:
+                    segments, _ = model.transcribe(audio_np, language=args.language)
+                    text = "".join([segment.text for segment in segments]).strip()
+                text = text.encode('cp932', errors='replace').decode('cp932')
 
                 # If we detected a pause between recordings, add a new item to our transcription.
                 # Otherwise edit the existing one.
@@ -137,5 +151,24 @@ def main():
         except KeyboardInterrupt:
             break
 
+def transcribe_with_openai(client, audio_np, language="ja"):
+    temp_dir = tempfile.gettempdir()  # Get temp directory path
+    temp_audio_path = os.path.join(temp_dir, "temp_audio.wav")
+
+    # Save the audio as a WAV file
+    sf.write(temp_audio_path, audio_np, samplerate=16000)
+
+    with open(temp_audio_path, "rb") as audio_file:
+        response = client.audio.transcriptions.create(
+            file=audio_file,
+            model="whisper-1",
+            language=language,
+        )
+
+    # Clean up the temporary file
+    os.remove(temp_audio_path)
+    return response.text
+    
+    return response
 if __name__ == "__main__":
     main()

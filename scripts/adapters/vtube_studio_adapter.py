@@ -5,6 +5,14 @@ import uuid
 import os
 
 class VTSAdapter:
+    hotkeys = {
+        1: "Relaxed",
+        2: "Shy",
+        3: "Excited",
+        4: "Angry",
+        5: "Sad"
+    }
+    
     def __init__(self, host="localhost", port=8001):
         self.uri = f"ws://{host}:{port}"
         self.session_id = None
@@ -13,13 +21,6 @@ class VTSAdapter:
         self.plugin_name = "AI VTuber"
         self.plugin_developer = "NonStopBeat"
         self.token = os.getenv("VTS_AUTHENTICATION_TOKEN")
-        self.hotkeys = {
-            1: "Relaxed",
-            2: "Shy",
-            3: "Excited",
-            4: "Angry",
-            5: "Sad"
-        }
 
     async def connect(self):
         try:
@@ -61,6 +62,7 @@ class VTSAdapter:
         :param hotkey_name: The name of the hotkey to trigger (e.g., "Relaxed"). 
                             If None, triggers all hotkeys.
         """
+        print(hotkey_name, "triggered.")
         if hotkey_name:
             # Find the hotkey ID by name
             hotkey_id = next((key for key, name in self.hotkeys.items() if name == hotkey_name), None)
