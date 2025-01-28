@@ -2,6 +2,7 @@ import subprocess
 from scripts.adapters.openai_adapter import OpenAIAdapter
 from time import sleep
 import signal
+import asyncio
 from scripts.sound.VoiceMaker import VoiceMaker
 from scripts.sound.play_sound import PlaySound
 
@@ -15,13 +16,16 @@ class VoiceChat:
         with open("storage/airi/voice_chat.txt", "r", encoding="utf-8") as f:
             voice_chat_prompt = f.read()
         self.voice_chat_prompt = voice_chat_prompt
+        self.terminated = False  # Flag to track termination
     
     def __run_asr(self):
         return subprocess.Popen(
             ['python', 'scripts/sound/asr.py'],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            text=True
+            text=True,
+            bufsize=1,  # Line-buffered output
+            universal_newlines=True  # Handle newlines cross-platform
         )
 
     def __chat(self, transcription: str):
@@ -39,50 +43,52 @@ class VoiceChat:
                                   "content": response})
         return response
     
-    def end(self):
-        self.process.terminate()
-        self.process.wait()
-        print("ボイスチャットのセッションが終了した。")
+    async def end(self):
+         if self.process and not self.terminated:
+            self.terminated = True  # Mark as terminated to avoid multiple calls
+            self.process.terminate()  # Try to terminate the process
+            await asyncio.to_thread(self.process.wait)  # Wait for the process to exit
+            print("ボイスチャットのセッションが終了した。")
 
-    def start(self):
+    async def __read_stdout(self):
+        while True:
+            line = await asyncio.to_thread(self.process.stdout.readline)  # Read one line asynchronously
+            if line:  # If there's a line read
+                line = line.strip()  # Clean up the line
+                if line:  # Only yield non-empty lines
+                    yield line  # Yield each line as it's read
+            elif self.process.poll() is not None:  # End of process
+                break
+
+
+    async def start(self):
         self.process = self.__run_asr()
         print("ボイスチャットのセッションが開始した。")
-        signal.signal(signal.SIGINT, lambda signum, frame: self.end)  # Handle interrupt signal (Ctrl+C)
-        signal.signal(signal.SIGTERM, lambda signum, frame: self.end)  # Handle terminate signal
+        signal.signal(signal.SIGINT, lambda signum, frame: asyncio.create_task(self.end()))
+        signal.signal(signal.SIGTERM, lambda signum, frame: asyncio.create_task(self.end()))
 
         try:
-            while True:
-                # ASRのトランスクリプションを取得する
-                output = self.process.stdout.readline()
-                output = output.replace("\n", "").replace(" ", "")
+            async for output in self.__read_stdout():
                 if 'ready' in output:
                     print("[ASRが準備完了した]")
-                    continue
-                if 'none' in output:
-                    print("[アイリがあなたのメッセージを無視した]")
-                    continue
-                if output == '' and self.process.poll() is not None:
-                    self.end()
-                    break
-                if output:
-                    transcription = output.strip()
-                    print("[音声入力]:", transcription)
-                
+                elif output:
+                    print("[音声入力]:", output)
                     # 音声合成して会話をする
-                    response = self.__chat(transcription)
-                    if response is not None:
+                    response = self.__chat(output)
+                    if 'none' in response:
+                        print("[アイリがあなたのメッセージを無視した]")
+                    elif response is not None:
                         response_voice = self.voice_maker.make_voice_style_bert_vits2(response)
                         self.play_sound.play_sound(response_voice)
                         print("[アイリ]:", response)
-                sleep(0.5)
         except Exception as e:
             print("予期せぬエラーが発生した：", e)
         finally:
-            self.end()
+            await self.end()
 
 if __name__ == "__main__":
     adapter = OpenAIAdapter()
     voice_maker = VoiceMaker()
     play_sound = PlaySound()
     voice_realtime = VoiceChat(adapter, voice_maker, play_sound)
-    voice_realtime.start()
+    asyncio.run(voice_realtime.start())
