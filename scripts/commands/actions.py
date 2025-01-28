@@ -18,7 +18,7 @@ PREDEFINED_ACTIONS = [
     {
         "name": "ENTER_DISCORD",
         "description": "Discordに入る。",
-        "realtime": True 
+        "realtime": True
     },
     {
         "name": "LEAVE_DISCORD",
@@ -85,6 +85,7 @@ EXAMPLE_ACTIONS = [
 class Actions:
     def __init__(self, vlife: VLife):
         self.vlife = vlife
+        self.queries = vlife.queries
         self.adapter = vlife.openai_adapter
         self.all_actions = PREDEFINED_ACTIONS.append(self.__load_saved_actions())
     
@@ -100,5 +101,17 @@ class Actions:
     def create_new_action():
         raise NotImplementedError
     
-    def take_action():
-        raise NotImplementedError
+    def take_action(self):
+        # 今、一番したいことは？
+        prompt = self.queries.load_prompt_from_file("storage/airi/decisions.txt")
+        decision = self.adapter.chat_completions([self.adapter.create_message('system', prompt),
+                                       self.adapter.create_message('user', "一番したいこと:")])
+        # 今の考えを整理しよう
+
+        
+        # 対応するコマンドを実行してください
+        prompt = self.queries.load_prompt_from_file("commands.txt")
+        command_list = self.adapter.chat_completions([self.adapter.create_message('system', prompt),
+                                       self.adapter.create_message('user', decision)])
+        
+        # 
