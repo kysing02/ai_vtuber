@@ -12,9 +12,9 @@ from discord.member import Member
 from discord import PCMVolumeTransformer, FFmpegPCMAudio
 from dotenv import load_dotenv
 from scripts.sound.voice_chat import VoiceChat
-
+from scripts.adapters.vtube_studio_adapter import VTSAdapter
 class DiscordBot:
-    def __init__(self, voice_chat: VoiceChat):
+    def __init__(self, voice_chat: VoiceChat, vts: VTSAdapter):
         # Configures intents
         intents = discord.Intents.default()
         intents.messages = True # Enable message event
@@ -35,13 +35,9 @@ class DiscordBot:
         self.client.event(self.on_ready)
         self.client.event(self.on_message)
         self.client.event(self.on_member_join)
-        self.client.event(self.on_keyboard_exit)
         # Airi specific parameters
         self.guild = None
         self.channel = None
-
-    async def on_keyboard_exit(self):
-        raise KeyboardInterrupt
 
     async def on_ready(self):
         print(f'{self.client.user} has connected to Discord!')
@@ -85,8 +81,8 @@ class DiscordBot:
 
     # Functions to control bot--------------------------------------------------
     async def join_voice_call(self):
-        # vc = await self.channel.connect()
-        # print(f"Joined {self.channel.name}")
+        vc = await self.channel.connect()
+        print(f"Joined {self.channel.name}")
         # Start the voice chat session
         await self.voice_chat.start()
 
@@ -96,7 +92,7 @@ class DiscordBot:
             await self.voice_chat.end()
 
             # Disconnect the bot from the voice channel
-            # await self.guild.voice_client.disconnect()
+            await self.guild.voice_client.disconnect()
             print(f"Left the voice channel.")
         else:
             print(f"I'm not in voice channel!")
@@ -115,5 +111,6 @@ if __name__ == "__main__":
         voice_maker=VoiceMaker(),
         play_sound=PlaySound()
     )
-    bot = DiscordBot(voice_chat)
+    vts = VTSAdapter()
+    bot = DiscordBot(voice_chat, vts)
     bot.run_bot()

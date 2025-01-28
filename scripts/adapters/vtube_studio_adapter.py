@@ -25,6 +25,7 @@ class VTSAdapter:
     async def connect(self):
         try:
             self.ws = await websockets.connect(self.uri)
+            asyncio.create_task(self.send_heartbeat())
             print("Connected to VTube Studio.")
             return True
         except ConnectionRefusedError:
@@ -73,7 +74,8 @@ class VTSAdapter:
                     "requestID": f"HotkeyRequest_{hotkey_id}",
                     "messageType": "HotkeyTriggerRequest",
                     "data": {
-                        "hotkeyID": hotkey_name
+                        "hotkeyID": hotkey_name,
+                        "excludedParameters": ["MouthOpen", "MouthForm"]
                     }
                 }
                 await self.ws.send(json.dumps(request))
@@ -81,6 +83,11 @@ class VTSAdapter:
                 print(f"Triggered hotkey {hotkey_id}: {hotkey_name}")
             else:
                 print(f"Hotkey '{hotkey_name}' not found.")
+
+    async def send_heartbeat(self):
+        while True:
+            await asyncio.sleep(30)  # Adjust interval if needed
+            await self.ws.ping()
 
     async def close(self):
         if self.ws:

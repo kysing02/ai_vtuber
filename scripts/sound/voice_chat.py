@@ -9,11 +9,14 @@ from scripts.sound.play_sound import PlaySound
 from scripts.adapters.openai_adapter import OpenAIAdapter
 from scripts.adapters.vtube_studio_adapter import VTSAdapter
 from scripts.reflection import Emotion
+from scripts.utils.helpers import split_japanese_text
+from scripts.sound.VoiceMaker import StyleBertVits2Adapter
 import os
 class VoiceChat:
     def __init__(self, adapter: OpenAIAdapter, voice_maker: VoiceMaker, play_sound: PlaySound, vts: VTSAdapter | None = None):
         self.adapter = adapter
         self.voice_maker = voice_maker
+        self.vits2 = StyleBertVits2Adapter() # 高速化のためにモデルを先にロードする（voice_makerの代わりに）
         self.play_sound = play_sound
         self.process = None
         self.talk_history: list[dict[str, str]] = []
@@ -25,7 +28,8 @@ class VoiceChat:
     
     def __run_asr(self):
         return subprocess.Popen(
-            [sys.executable, 'scripts/sound/asr.py', '--use_api', 'True'],
+            # [sys.executable, 'scripts/sound/asr.py', '--use_api', 'True'],
+            [sys.executable, 'scripts/sound/asr.py'],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
@@ -68,8 +72,9 @@ class VoiceChat:
 
 
     async def start(self):
-        await self.vts.connect()
-        await self.vts.authenticate()
+        if self.vts:
+            await self.vts.connect()
+            await self.vts.authenticate()
         self.process = self.__run_asr()
         print("ボイスチャットのセッションが開始した。")
         signal.signal(signal.SIGINT, lambda signum, frame: asyncio.create_task(self.end()))
@@ -88,17 +93,20 @@ class VoiceChat:
                     if 'none' in response:
                         print("[アイリがあなたのメッセージを無視した]")
                     elif response is not None:
-                        token, text = Emotion.parse_expression(response)
-                        response_voice = self.voice_maker.make_voice_style_bert_vits2(text)
+                        token, text_raw = Emotion.parse_expression(response)
+                        text_list = split_japanese_text(text_raw)
+                        response_voice = self.vits2.get_voice(text_list.pop(0))
                         if token and self.vts is not None:
                             for _, expression in self.vts.hotkeys.items():
                                 if expression == token:
-                                    print("expression triggered")
                                     await self.vts.trigger_hotkeys(expression)
+                        self.play_sound.play_sound(response_voice)
+                        for text in text_list:
+                            response_voice = self.vits2.get_voice(text)
+                            self.play_sound.play_sound(response_voice)
                         else:
                             text = response
-                        self.play_sound.play_sound(response_voice)
-                        print("[アイリ]:", response)
+                        print("[アイリ]:", text)
                         
         # except Exception as e:
         #     print("予期せぬエラーが発生した：", e)

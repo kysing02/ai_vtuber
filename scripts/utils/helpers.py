@@ -1,5 +1,29 @@
+import re
 import yaml
 from typing import Dict
+
+def split_japanese_text(text: str):
+    """
+    Splits Japanese text into smaller segments:
+    - Removes "、" separators.
+    - Retains continuous punctuation like "！？" or "？！" as a single unit.
+    """
+    # Define separators but exclude "、" (it will be removed)
+    separators = "。！？\n"
+    
+    # Use regex to split the text while retaining separators
+    segments = re.split(f"([{separators}]+)", text)
+    
+    # Combine text and its separator while skipping "、"
+    result = []
+    for i in range(0, len(segments), 2):
+        base_text = segments[i].replace("、", "")  # Remove "、"
+        if i + 1 < len(segments):
+            base_text += segments[i + 1]  # Append the separator(s)
+        if base_text.strip():  # Ignore empty results
+            result.append(base_text.strip())
+    
+    return result
 
 def get_weekday_name(weekday: int) -> str:
     return {
