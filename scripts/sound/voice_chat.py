@@ -8,7 +8,7 @@ from scripts.sound.VoiceMaker import VoiceMaker
 from scripts.sound.play_sound import PlaySound
 from scripts.adapters.openai_adapter import OpenAIAdapter
 from scripts.adapters.vtube_studio_adapter import VTSAdapter
-from scripts.reflection import Emotion
+from scripts.memory.reflection import Emotion
 from scripts.utils.helpers import split_japanese_text
 from scripts.sound.VoiceMaker import StyleBertVits2Adapter
 import os
