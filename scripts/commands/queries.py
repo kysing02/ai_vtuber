@@ -22,9 +22,3 @@ class Queries:
 
     def parse(text: str):
         raise NotImplementedError
-    
-    def load_prompt_from_file(self, prompt_path: str):
-        with open(prompt_path) as file:
-            prompt_template = file.read()
-            prompt = self.parse(prompt_template)
-            return prompt

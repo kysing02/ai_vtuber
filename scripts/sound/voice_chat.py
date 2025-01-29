@@ -28,8 +28,8 @@ class VoiceChat:
 
     def __run_asr(self):
         return subprocess.Popen(
-            [sys.executable, 'scripts/sound/asr.py', '--use_api', 'True'],
-            # [sys.executable, 'scripts/sound/asr.py'],
+            # [sys.executable, 'scripts/sound/asr.py', '--use_api', 'True'],
+            [sys.executable, 'scripts/sound/asr.py'],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
@@ -94,7 +94,8 @@ class VoiceChat:
                     elif response is not None:
                         token, text_raw = Emotion.parse_expression(response)
                         text_list = split_japanese_text(text_raw)
-                        response_voice = self.vits2.get_voice(text_list.pop(0))
+                        # response_voice = self.vits2.get_voice(text_list.pop(0))
+                        response_voice = self.voice_maker.make_voice_fish_audio(text_list.pop(0))
                         if token and self.vts is not None:
                             for _, expression in self.vts.hotkeys.items():
                                 if expression == token:

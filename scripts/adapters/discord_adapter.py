@@ -14,8 +14,9 @@ from discord import PCMVolumeTransformer, FFmpegPCMAudio
 from dotenv import load_dotenv
 from scripts.sound.voice_chat import VoiceChat
 from scripts.adapters.vtube_studio_adapter import VTSAdapter
+from scripts.adapters.openai_adapter import OpenAIAdapter
 class DiscordBot:
-    def __init__(self, voice_chat: VoiceChat, vts: VTSAdapter):
+    def __init__(self, voice_chat: VoiceChat, vts: VTSAdapter, adapter: OpenAIAdapter):
         # Configures intents
         intents = discord.Intents.default()
         intents.messages = True # Enable message event
@@ -26,7 +27,8 @@ class DiscordBot:
         # Initialize the client
         self.client = discord.Client(intents=intents)
         self.voice_chat = voice_chat
-
+        self.adapter = adapter
+        
         # Load the bot token
         self.token = os.getenv('DISCORD_BOT_TOKEN')
         self.guild_id = os.getenv('GUILD_ID')
@@ -39,13 +41,13 @@ class DiscordBot:
 
         # Airi specific parameters
         self.guild = None
-        self.channel = None
+        self.voice_channel = None
 
     async def on_ready(self):
         print(f'{self.client.user} has connected to Discord!')
         self.guild: Guild = discord.utils.get(self.client.guilds, id=int(self.guild_id))
         print(f'{self.client.user} is connected to the guild: {self.guild.name} (id: {self.guild.id})')
-        self.channel: VoiceChannel = discord.utils.get(self.guild.voice_channels, name=self.voice_channel_name)
+        self.voice_channel: VoiceChannel = discord.utils.get(self.guild.voice_channels, name=self.voice_channel_name)
         # Check guild members
         members = '\n - '.join([member.name for member in self.guild.members])
         print(f'Guild Members:\n - {members}')
@@ -67,18 +69,22 @@ class DiscordBot:
         if message.content == "!voice_join":
             await self.join_voice_chat()
 
-        if message.content == "!voice_leave":
+        elif message.content == "!voice_leave":
             await self.leave_voice_chat()
         
-        if message.content == "!force_end":
+        elif message.content == "!force_end":
             raise KeyboardInterrupt
         
-        if message.content == "!invisible":
+        elif message.content == "!invisible":
             await self.set_invisible()
         
-        if message.content == "!online":
+        elif message.content == "!online":
             await self.set_online()
 
+        else:
+            response = self.adapter.chat_completions([self.adapter.create_message('assistant', "チャットに返事してください"),
+                                                    self.adapter.create_message('user', message.content)])
+            await message.channel.send(response)
         # ----------------------------------------------------------------------
         
         # Handle other messages
@@ -100,8 +106,8 @@ class DiscordBot:
 
     # Functions to control bot--------------------------------------------------
     async def join_voice_chat(self):
-        vc = await self.channel.connect()
-        print(f"Joined {self.channel.name}")
+        vc = await self.voice_channel.connect()
+        print(f"Joined {self.voice_channel.name}")
         # Start the voice chat session
         await self.voice_chat.start()
 
@@ -133,5 +139,5 @@ if __name__ == "__main__":
             play_sound=PlaySound(),
             vts=vts
         )
-        bot = DiscordBot(voice_chat, vts)
+        bot = DiscordBot(voice_chat, vts, adapter=OpenAIAdapter())
         bot.run_bot()

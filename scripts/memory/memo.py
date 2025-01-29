@@ -36,8 +36,4 @@ class Memo:
 
 # Example usage:
 memo = Memo()
-memo.write_memo("Buy groceries")
-memo.write_memo("Call John")
-memo.write_memo("Call Kwek")
-memo.write_memo("Call Yong")
 print(memo.read_memo(2))  # Output: ['Buy groceries', 'Call John']

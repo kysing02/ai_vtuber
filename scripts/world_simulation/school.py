@@ -13,6 +13,14 @@ class TimeTable(BaseModel):
     thursday: list[str]
     friday: list[str]
 
+class SchoolEvent(BaseModel):
+    month: int
+    day: int
+    description: str
+
+class SchoolEvents(BaseModel):
+    events: list[SchoolEvent]
+
 class School:
     def __init__(self, world_time: WorldTime, adapter: OpenAIAdapter):
         self.world_time = world_time
@@ -75,9 +83,9 @@ class School:
         """
         messages = [self.adapter.create_message("assistant", system_message),
                     self.adapter.create_message("user", f"{year}年の行事：\n" + year_schedule_draft)]
-        year_schedule = self.adapter.chat_completions()
-        with open(f"storage/year_schedule/school_events_{year}.txt", "w", encoding="utf-8") as f:
-            f.write(year_schedule)
+        year_schedule = self.adapter.create_structured_output(messages, SchoolEvents)
+        with open(f"storage/year_schedule/school_events_{year}.json", "w", encoding="utf-8") as f:
+            f.write(year_schedule.model_dump_json(indent=4))
 
         print(f"{year}年のスケジュールが生成された")
 
@@ -98,8 +106,11 @@ class School:
 
         print(f"{year}年の学校の時間割が生成された")
     
-    def get_timetable_str(self, year: int, weekday: int) -> str:
-        if weekday == 5 or 6:
+    def get_timetable_str(self, year: int=None, weekday: int=None) -> str:
+        if not year or not weekday:
+            year = self.world_time.current_time.year
+            weekday = self.world_time.current_time.weekday()
+        if weekday == 5 or weekday == 6:
             return "今日は土日なので学校がありません。"
         with open(f"storage/year_schedule/school_timetable_{year}.json", "r", encoding="utf-8") as f:
             timetable_json = json.load(f)
@@ -116,10 +127,45 @@ class School:
         timetable = utils.replace(replacements, timetable_template)
         return timetable
     
-    def get_school_events_str(self):
-        with open(f"storage/year_schedule/school_timetable_template.txt", "r", encoding="utf-8") as f:
-            timetable_template = f.read()
+    def get_school_events_str(self, datetime: datetime=None) -> str:
+        school_events = self.get_school_events(datetime)
+        year = self.__get_annual_year(school_events)
+        school_events_str = f"{year}年の学校行事："
+        
+        for event in school_events.events:
+            event_str = f"{event.month}月{event.day}日 {event.description}"
+            school_events_str = "\n".join([school_events_str, event_str])
+        
+        return school_events_str
+    
+    def get_school_events(self, datetime: datetime=None):
+        if datetime is None:
+            datetime = self.world_time.current_time
+        year = self.__get_annual_year(datetime)
+        with open(f"storage/year_schedule/school_events{year}.json", "r", encoding="utf-8") as f:
+            school_events_data = json.load(f)
+        return SchoolEvents(event=[SchoolEvent(**event) for event in school_events_data])
 
+    def get_school_event_today(self, datetime: datetime):
+        school_events = self.get_school_events()
+        if datetime is None:
+            datetime = self.world_time.current_time
+        for event in school_events.events:
+            if event.day == datetime.day and event.month == datetime.month:
+                return event
+        return None
+    
+    def get_school_event_today_str(self, datetime: datetime):
+        if datetime is None:
+            datetime = self.world_time.current_time
+        event_today = self.get_school_event_today(datetime)
+        return f"{event_today.month}月{event_today.day}日の学校行事： {event_today.description}"
+    
+    def __get_annual_year(self, datetime: datetime):
+        # 4月以降の年度は今年、3月以前の年度は去年
+        # 例. 2024.4 -> 2024, 2025.3 -> 2024
+        return datetime.year if datetime.month >= 4 else datetime.year - 1
+    
 if __name__ == "__main__":
     adapter = OpenAIAdapter()
     school = School(adapter=adapter, world_time=WorldTime(adapter))

@@ -24,3 +24,13 @@ class DailyPlanner:
         daily_plan = self.adapter.chat_completions(message)
         with open(daily_plan_file_path) as file:
             file.write(daily_plan)
+
+    def get_daily_plan(self, datetime: datetime):
+        datestr = datetime.strftime("%Y%m%d")
+        daily_plan_file_path = f"storage/daily_plan/{datestr}.txt"
+        with open(daily_plan_file_path) as file:
+            daily_plan = file.read()
+        return daily_plan
+    
+    def change_daily_plan(self, datetime: datetime, )
+        prompt = FileManager.open_file(FilePath.PROMPT_CHANGE_PLAN)

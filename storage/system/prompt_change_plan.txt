@@ -1,0 +1,15 @@
+#
+{!PROFILE}
+#
+{!SCHOOL_EVENTS}
+#
+{!TIMETABLE}
+#
+{!MEMO_APP}
+#
+{!DATE} {!TIME}
+#
+{THOUGHTS}
+#
+
+入力された予定表を更新して、新しい予定表を作ってください。

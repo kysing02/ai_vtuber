@@ -4,9 +4,7 @@ import dotenv
 import os
 from xml.etree.ElementTree import Element, SubElement, tostring
 
-
 dotenv.load_dotenv()
-
 
 class HatenaEntryAdapter:
     def __init__(self):

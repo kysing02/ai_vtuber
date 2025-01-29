@@ -5,7 +5,7 @@ from scripts.memory.sensory_memory import SensoryMemory
 from scripts.commands.action_manager import ActionManager
 from typing_extensions import TypedDict
 from enum import Enum
-
+from file_manager import FilePath, FileManager
 # アクションはAIVTuber向けインターフェース
 
 class Action(ABC):
@@ -16,6 +16,7 @@ class Action(ABC):
         self.sensory_memory = vlife.sensory_memory
         self.action_manager = vlife.action_manager
         self.vlife = vlife
+        self.adapter = vlife.openai_adapter
 
     @abstractmethod
     async def execute(self):
@@ -102,11 +103,30 @@ class MakeMemo(Action):
 class ReadMemo(Action):
     async def execute(self):
         memo = self.vlife.memo
-        self.sensory_memory.add("アイリがスマホアプリでメモを開いた：", memo.read_memo(10))
+        memo_list_str = "\n".join(memo.read_memo(10))
+        self.sensory_memory.add("アイリがスマホアプリでメモを開いた：\n", memo_list_str)
         
 class CheckSchoolEvents(Action):
     async def execute(self):
-        school = self.vlife.school.get_timetable_str()
+        school = self.vlife.school
+        school_events = school.get_school_events_str()
+        self.sensory_memory.add("アイリが学校の行事表を調べた：\n", school_events)
+
+class CheckTimeTable(Action):
+    async def execute(self):
+        school = self.vlife.school
+        timetable = school.get_timetable_str()
+        self.sensory_memory.add("アイリが時間割を調べた：\n", timetable)
+
+class ChangeTodayPlan(Action):
+    async def execute(self):
+        self.sensory_memory.add("アイリが今日の予定を変更した。")
+        plan_change = self.action_manager.ask("今日はどのように予定を変更しようか？具体的に何時何分から何時何分まで？")
+        self.vlife.daily_planner.change_daily_plan(plan_change)
+        self.adapter.chat_completions([self.adapter.create_message('system', prompt),
+                                       self.adapter.create_message('user', plan_change)])
+        
+
 PREDEFINED_ACTIONS = [
     {
         "name": "STREAMING",
@@ -224,6 +244,7 @@ class ActionManager:
     
     async def take_action(self):
         # 今、一番したいことは？
+        # TODO これは変更した
         prompt = self.queries.load_prompt_from_file("storage/commands/actions.txt")
         decision = self.adapter.chat_completions([self.adapter.create_message('system', prompt),
                                        self.adapter.create_message('user', "一番したいこと:")])
@@ -231,9 +252,13 @@ class ActionManager:
 
         
         # 対応するコマンドを実行してください
+        # TODO これは変更した
         prompt = self.queries.load_prompt_from_file("storage/commands/commands.txt")
         command_list = self.adapter.chat_completions([self.adapter.create_message('system', prompt),
                                        self.adapter.create_message('user', decision)])
         
         # 対応するコマンドに応じて行動を取る
         action_list = self.parse(command_list)
+
+    def ask(self):
+        raise NotImplementedError
