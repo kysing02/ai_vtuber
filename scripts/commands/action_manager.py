@@ -71,13 +71,42 @@ class ReadNewsAction(Action):
         self.sensory_memory.add("アイリがYahooニュースを読み始めた。")
         yahoo_news = self.vlife.yahoo_news
         trendings = yahoo_news.trendings(10)
+        if not trendings:
+            self.sensory_memory.add("新しいニュースがありませんでした。")
         article_list_str = ""
         for idx, article in enumerate(trendings, 1):
             article_list_str += f"{idx}. {article.title}\n{article.link}\n"
             print(article_list_str)
-        interested_article_id = int(self.action_manager.ask("Yahooニュースを開いた。興味のあるタイトルを数字で一つ選んでください：(1-10)"))
-        
+        selected_id = int(self.action_manager.ask("Yahooニュースを開いた。興味のあるタイトルを数字で一つ選んでください：(1-10)"))
+        content = yahoo_news.get_article_content(trendings[selected_id-1])
+        if not content:
+            self.sensory_memory.add("ニュースのリンクを開けませんでした。")
+        self.sensory_memory.add(f"アイリがニュースを読んだ：\nタイトル：{trendings[selected_id-1].title}\n内容：{content}")   
 
+class SearchNewsAction(Action):
+    async def execute(self):
+        self.sensory_memory.add("アイリがYahooニュースの検索機能を使った。")
+        yahoo_news = self.vlife.yahoo_news
+        selected_topic = self.action_manager.ask("Yahooニュースを開いた。検索キーワードを入力してください：")
+        if not selected_topic:
+            self.sensory_memory.add("検索結果がありませんでした。")
+
+class MakeMemo(Action):
+    async def execute(self):
+        self.sensory_memory.add("アイリがスマホアプリにメモを書いた。")
+        memo = self.vlife.memo
+        content = self.action_manager.ask("メモアプリを開いた。なにを記録しますか？")
+        memo.write_memo(content)
+        self.sensory_memory.add("アイリがスマホアプリでメモをした：", content)
+
+class ReadMemo(Action):
+    async def execute(self):
+        memo = self.vlife.memo
+        self.sensory_memory.add("アイリがスマホアプリでメモを開いた：", memo.read_memo(10))
+        
+class CheckSchoolEvents(Action):
+    async def execute(self):
+        school = self.vlife.school.get_timetable_str()
 PREDEFINED_ACTIONS = [
     {
         "name": "STREAMING",
@@ -90,8 +119,9 @@ PREDEFINED_ACTIONS = [
         "action": PostTwitterAction
     },
     {
-        "name": "DIARY_WRITING",
-        "description": "ブログを開いて、日記を書く。"
+        "name": "WRITE_DIARY",
+        "description": "ブログを開いて、日記を書く。",
+        "action": WriteDiaryAction
     },
     {
         "name": "ENTER_DISCORD",

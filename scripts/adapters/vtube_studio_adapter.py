@@ -22,7 +22,12 @@ class VTSAdapter:
         self.plugin_developer = "NonStopBeat"
         self.token = os.getenv("VTS_AUTHENTICATION_TOKEN")
 
-    async def connect(self):
+    async def connect_auth(self):
+        if await self.__connect():
+            if await self.__authenticate():
+                return True
+
+    async def __connect(self):
         try:
             self.ws = await websockets.connect(self.uri)
             asyncio.create_task(self.send_heartbeat())
@@ -33,7 +38,7 @@ class VTSAdapter:
             return False
         return True
 
-    async def authenticate(self):
+    async def __authenticate(self):
         auth_request = {
             "apiName": "VTubeStudioPublicAPI",
             "apiVersion": "1.0",
@@ -87,7 +92,11 @@ class VTSAdapter:
     async def send_heartbeat(self):
         while True:
             await asyncio.sleep(30)  # Adjust interval if needed
-            await self.ws.ping()
+            try:
+                await self.ws.ping()
+            except Exception as e:
+                print(f"Heartbeat failed: {e}")
+                break
 
     async def close(self):
         if self.ws:
@@ -96,13 +105,12 @@ class VTSAdapter:
 
 async def main():
     vts_adapter = VTSAdapter()
-    if await vts_adapter.connect():
-        if await vts_adapter.authenticate():
-            while True:
-                expression = input("Enter an expression to change to (or 'exit' to quit): ")
-                if expression.lower() == "exit":
-                    break
-                await vts_adapter.trigger_hotkeys(expression)
+    if await vts_adapter.connect_auth():
+        while True:
+            expression = input("Enter an expression to change to (or 'exit' to quit): ")
+            if expression.lower() == "exit":
+                break
+            await vts_adapter.trigger_hotkeys(expression)
 
     await vts_adapter.close()
 

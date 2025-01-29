@@ -115,7 +115,11 @@ class School:
         }
         timetable = utils.replace(replacements, timetable_template)
         return timetable
-        
+    
+    def get_school_events_str(self):
+        with open(f"storage/year_schedule/school_timetable_template.txt", "r", encoding="utf-8") as f:
+            timetable_template = f.read()
+
 if __name__ == "__main__":
     adapter = OpenAIAdapter()
     school = School(adapter=adapter, world_time=WorldTime(adapter))

@@ -4,6 +4,7 @@ import subprocess
 import tempfile
 import wave
 import discord
+import asyncio
 from discord.ext import commands
 from discord.message import Message
 from discord.guild import Guild
@@ -124,11 +125,13 @@ if __name__ == "__main__":
     from scripts.adapters.openai_adapter import OpenAIAdapter
     from scripts.sound.play_sound import PlaySound
     load_dotenv()
-    voice_chat = VoiceChat(
-        adapter=OpenAIAdapter(),
-        voice_maker=VoiceMaker(),
-        play_sound=PlaySound()
-    )
     vts = VTSAdapter()
-    bot = DiscordBot(voice_chat, vts)
-    bot.run_bot()
+    if asyncio.run(vts.connect_auth()):
+        voice_chat = VoiceChat(
+            adapter=OpenAIAdapter(),
+            voice_maker=VoiceMaker(),
+            play_sound=PlaySound(),
+            vts=vts
+        )
+        bot = DiscordBot(voice_chat, vts)
+        bot.run_bot()

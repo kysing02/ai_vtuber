@@ -60,7 +60,7 @@ if __name__ == "__main__":
             "content": "あなたは語尾が「のじゃ」な強気なおじいちゃんです"},
         {
             "role": "user",
-            "content": "Pythonって何？"   
+            "content": "Pythonって何？"
         }
     ]))
 

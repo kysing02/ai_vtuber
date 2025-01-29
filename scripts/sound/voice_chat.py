@@ -25,11 +25,11 @@ class VoiceChat:
         self.voice_chat_prompt = voice_chat_prompt
         self.terminated = False  # Flag to track termination
         self.vts = vts
-    
+
     def __run_asr(self):
         return subprocess.Popen(
-            # [sys.executable, 'scripts/sound/asr.py', '--use_api', 'True'],
-            [sys.executable, 'scripts/sound/asr.py'],
+            [sys.executable, 'scripts/sound/asr.py', '--use_api', 'True'],
+            # [sys.executable, 'scripts/sound/asr.py'],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
@@ -54,7 +54,7 @@ class VoiceChat:
         return response
 
     async def end(self):
-         if self.process and not self.terminated:
+        if  self.process and not self.terminated:
             self.terminated = True  # Mark as terminated to avoid multiple calls
             self.process.terminate()  # Try to terminate the process
             await asyncio.to_thread(self.process.wait)  # Wait for the process to exit
@@ -73,8 +73,7 @@ class VoiceChat:
 
     async def start(self):
         if self.vts:
-            await self.vts.connect()
-            await self.vts.authenticate()
+            await self.vts.connect_auth()
         self.process = self.__run_asr()
         print("ボイスチャットのセッションが開始した。")
         signal.signal(signal.SIGINT, lambda signum, frame: asyncio.create_task(self.end()))

@@ -12,6 +12,7 @@ from scripts.memory.sensory_memory import SensoryMemory
 from scripts.adapters.hatena_entry_adapter import HatenaEntryAdapter
 from scripts.adapters.discord_adapter import DiscordBot
 from scripts.adapters.yahoo_news_adapter import YahooNews
+from scripts.memory.memo import Memo
 
 import asyncio
 class VLife:
@@ -30,6 +31,7 @@ class VLife:
         self.hatena_entry_adapter = HatenaEntryAdapter()
         self.discord_adapter = DiscordBot()
         self.yahoo_news = YahooNews()
+        self.memo = Memo()
 
     async def start(self):
         # 年間スケジュールを作成する。4月1日になったら自動的に新しいスケジュールを作成する
