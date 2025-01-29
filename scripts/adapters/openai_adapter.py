@@ -9,7 +9,6 @@ class Message(TypedDict):
 
 class OpenAIAdapter:
     MODEL_NAME = "gpt-4o-mini"
-
     def __init__(self, model_name: str = MODEL_NAME):
         self.client = OpenAI(api_key=os.getenv("OPEN_AI_KEY"))
         self.MODEL_NAME = model_name

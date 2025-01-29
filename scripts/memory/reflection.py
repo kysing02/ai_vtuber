@@ -13,3 +13,7 @@ class Emotion:
             print("TOKEN:", token)
             return token, text
         return None, input_text
+    
+class Reflection:
+    def __init__(self):
+        raise NotImplementedError

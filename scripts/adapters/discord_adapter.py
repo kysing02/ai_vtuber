@@ -35,6 +35,7 @@ class DiscordBot:
         self.client.event(self.on_ready)
         self.client.event(self.on_message)
         self.client.event(self.on_member_join)
+
         # Airi specific parameters
         self.guild = None
         self.channel = None
@@ -47,6 +48,9 @@ class DiscordBot:
         # Check guild members
         members = '\n - '.join([member.name for member in self.guild.members])
         print(f'Guild Members:\n - {members}')
+        
+        # Set the bot to appear offline
+        await self.set_invisible()
 
     async def on_message(self, message: Message):
         # Ignore bot's own messages
@@ -60,7 +64,7 @@ class DiscordBot:
         
         # System level commands-------------------------------------------------
         if message.content == "!voice_join":
-            await self.join_voice_call()
+            await self.join_voice_chat()
 
         if message.content == "!voice_leave":
             await self.leave_voice_call()
@@ -68,11 +72,25 @@ class DiscordBot:
         if message.content == "!force_end":
             raise KeyboardInterrupt
         
+        if message.content == "!invisible":
+            await self.set_invisible()
+        
+        if message.content == "!online":
+            await self.set_online()
+
         # ----------------------------------------------------------------------
         
         # Handle other messages
         print("Received:", message)
-            
+
+    async def set_invisible(self):
+        await self.client.change_presence(status=discord.Status.invisible)
+        print(f"{self.client.user} is now invisible.")
+
+    async def set_online(self):
+        await self.client.change_presence(status=discord.Status.online)
+        print(f'{self.client.user} is now online.')
+
     async def on_member_join(self, member: Member):
         await member.create_dm()
         await member.dm_channel.send(
@@ -80,7 +98,7 @@ class DiscordBot:
         )
 
     # Functions to control bot--------------------------------------------------
-    async def join_voice_call(self):
+    async def join_voice_chat(self):
         vc = await self.channel.connect()
         print(f"Joined {self.channel.name}")
         # Start the voice chat session
