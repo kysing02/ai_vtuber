@@ -11,8 +11,7 @@
 #
 {!MEMO_APP}
 #
-{!DATE}
-{!TIME}
+{!DATETIME}
 #
 {!THOUGHTS}
 #

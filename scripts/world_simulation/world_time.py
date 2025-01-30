@@ -33,7 +33,7 @@ class WorldTime:
             time.sleep(1)
 
     def get_time_str(self) -> str:
-        return self.current_time.strftime("%Y/%m/%d %H時%M分")
+        return self.current_time.strftime("%Y年%m月%d日 %H時%M分")
     
     def proceed_time(self, steps: timedelta = None):
         if steps is None:

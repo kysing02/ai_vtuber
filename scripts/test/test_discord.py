@@ -5,6 +5,7 @@ import signal
 import os
 from scripts.sound.VoiceMaker import VoiceMaker
 from scripts.sound.play_sound import PlaySound
+from scripts.file_manager import FileManager
 
 voice_maker = VoiceMaker()
 play_sound = PlaySound()
@@ -23,8 +24,9 @@ def process_transcription(transcription: str, openai_adapter: OpenAIAdapter):
     """Send transcription to OpenAI and get the response."""
     if transcription in ignore_message:
         return
-    message = openai_adapter.create_message("user", transcription)
-    response = openai_adapter.chat_completions([message])
+    
+    message = [openai_adapter.create_message("assistant", profile = FileManager.read(FilePath.FILE_PROFILE)),openai_adapter.create_message("user", transcription)]
+    response = openai_adapter.chat_completions(message)
     return response
 
 def main():

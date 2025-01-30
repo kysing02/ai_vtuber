@@ -5,6 +5,7 @@ from datetime import datetime
 import os
 import json
 import scripts.utils.helpers as utils
+from file_manager import FileManager, FilePath
 
 class TimeTable(BaseModel):
     monday: list[str]
@@ -31,9 +32,9 @@ class School:
                                               callback=lambda : self.make_year_schedule(self.world_time.current_time.year + 1))
         self.world_time.callback_schedules.append(next_year_schedule)
 
-        events_file_path = f"storage/year_schedule/school_events_{year}.txt"
-        timetable_file_path = f"storage/year_schedule/school_timetable_{year}.txt"
-        if os.path.exists(events_file_path) and os.path.exists(timetable_file_path):
+        events_file_path = FilePath.JSON_SCHOOL_EVENTS.format(year=year)
+        timetable_file_path = FilePath.JSON_TIMETABLE.format(year=year)
+        if FileManager.exist(events_file_path) and FileManager.exist(timetable_file_path):
             print("年間スケジュールと時間割が既に存在しているため再生成しない。")
             return
 
@@ -64,7 +65,8 @@ class School:
         3月1日 卒業式
         3月15日 新入生オリエンテーション
         3月25日 学年末試験
-        """
+        """.strip()
+
         messages = [self.adapter.create_message("system", system_message),
                     self.adapter.create_message("user", f"{year}年の行事：")]
         year_schedule_draft = self.adapter.chat_completions(messages)
@@ -80,12 +82,12 @@ class School:
         5月15日 遠足（行き先：近くの公園）
         ...(省略)...
         3月25日 学年末試験
-        """
+        """.strip()
+
         messages = [self.adapter.create_message("assistant", system_message),
                     self.adapter.create_message("user", f"{year}年の行事：\n" + year_schedule_draft)]
         year_schedule = self.adapter.create_structured_output(messages, SchoolEvents)
-        with open(f"storage/year_schedule/school_events_{year}.json", "w", encoding="utf-8") as f:
-            f.write(year_schedule.model_dump_json(indent=4))
+        FileManager.write_json(events_file_path, year_schedule)
 
         print(f"{year}年のスケジュールが生成された")
 
@@ -100,9 +102,8 @@ class School:
         """
         messages = [self.adapter.create_message("system", system_message), 
                     self.adapter.create_message("user", f"{year}年の時間割:\n")]
-        timetable: TimeTable = self.adapter.create_structured_output(messages, TimeTable)
-        with open(f"storage/year_schedule/school_timetable_{year}.json", "w", encoding="utf-8") as f:
-            f.write(timetable.model_dump_json(indent=4))
+        timetable = self.adapter.create_structured_output(messages, TimeTable)
+        FileManager.write_json(timetable_file_path, timetable)
 
         print(f"{year}年の学校の時間割が生成された")
     
@@ -112,10 +113,8 @@ class School:
             weekday = self.world_time.current_time.weekday()
         if weekday == 5 or weekday == 6:
             return "今日は土日なので学校がありません。"
-        with open(f"storage/year_schedule/school_timetable_{year}.json", "r", encoding="utf-8") as f:
-            timetable_json = json.load(f)
-        with open(f"storage/year_schedule/school_timetable_template.txt", "r", encoding="utf-8") as f:
-            timetable_template = f.read()
+        timetable_json = FileManager.read_json(FilePath.JSON_TIMETABLE.format(year=year))
+        timetable_template = FileManager.read(FilePath.TEXT_TIMETABLE_TEMPLATE)
         weekday_name = utils.decapitalize(utils.get_weekday_name(weekday))
         replacements = {
             "{0}": weekday_name,
@@ -142,8 +141,7 @@ class School:
         if datetime is None:
             datetime = self.world_time.current_time
         year = self.__get_annual_year(datetime)
-        with open(f"storage/year_schedule/school_events{year}.json", "r", encoding="utf-8") as f:
-            school_events_data = json.load(f)
+        school_events_data = FileManager.read_json(FilePath.JSON_SCHOOL_EVENTS.format(year=year))
         return SchoolEvents(event=[SchoolEvent(**event) for event in school_events_data])
 
     def get_school_event_today(self, datetime: datetime):

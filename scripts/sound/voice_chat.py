@@ -11,6 +11,8 @@ from scripts.adapters.vtube_studio_adapter import VTSAdapter
 from scripts.memory.reflection import Emotion
 from scripts.utils.helpers import split_japanese_text
 from scripts.sound.VoiceMaker import StyleBertVits2Adapter
+from scripts.file_manager import FileManager, FilePath
+
 import os
 class VoiceChat:
     def __init__(self, adapter: OpenAIAdapter, voice_maker: VoiceMaker, play_sound: PlaySound, vts: VTSAdapter | None = None):
@@ -20,16 +22,14 @@ class VoiceChat:
         self.play_sound = play_sound
         self.process = None
         self.talk_history: list[dict[str, str]] = []
-        with open("storage/airi/voice_chat.txt", "r", encoding="utf-8") as f:
-            voice_chat_prompt = f.read()
-        self.voice_chat_prompt = voice_chat_prompt
+        self.voice_chat_prompt = FileManager.read(FilePath.PROMPT_VOICE_CHAT)
         self.terminated = False  # Flag to track termination
         self.vts = vts
 
     def __run_asr(self):
         return subprocess.Popen(
-            # [sys.executable, 'scripts/sound/asr.py', '--use_api', 'True'],
-            [sys.executable, 'scripts/sound/asr.py'],
+            [sys.executable, 'scripts/sound/asr.py', '--use_api', 'True'],
+            # [sys.executable, 'scripts/sound/asr.py'],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,

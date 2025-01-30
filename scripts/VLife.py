@@ -1,4 +1,5 @@
 # VLifeシステムの実装
+import asyncio
 from dotenv import load_dotenv
 import scripts.utils.helpers as helpers
 from scripts.adapters.openai_adapter import OpenAIAdapter
@@ -13,8 +14,8 @@ from scripts.adapters.hatena_entry_adapter import HatenaEntryAdapter
 from scripts.adapters.discord_adapter import DiscordBot
 from scripts.adapters.yahoo_news_adapter import YahooNews
 from scripts.memory.memo import Memo
+from scripts.file_manager import FileManager, FilePath
 
-import asyncio
 class VLife:
     def __init__(self):
         self.config = helpers.load_config("config.yaml")
@@ -43,6 +44,11 @@ class VLife:
             await self.action_manager.take_action()
             await asyncio.sleep(1)  # Add a small delay to avoid busy-waiting
 
+    @staticmethod
+    def get_profile():
+        profile = FileManager.read(FilePath.TEXT_PROFILE)
+        return profile
+    
 if __name__ == '__main__':
     load_dotenv()
     vlife = VLife()

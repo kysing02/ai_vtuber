@@ -15,6 +15,8 @@ from dotenv import load_dotenv
 from scripts.sound.voice_chat import VoiceChat
 from scripts.adapters.vtube_studio_adapter import VTSAdapter
 from scripts.adapters.openai_adapter import OpenAIAdapter
+from scripts.file_manager import FileManager, FilePath
+
 class DiscordBot:
     def __init__(self, voice_chat: VoiceChat, vts: VTSAdapter, adapter: OpenAIAdapter):
         # Configures intents
@@ -82,7 +84,8 @@ class DiscordBot:
             await self.set_online()
 
         else:
-            response = self.adapter.chat_completions([self.adapter.create_message('assistant', "チャットに返事してください"),
+            profile = FileManager.read(FilePath.PROMPT_VOICE_CHAT)
+            response = self.adapter.chat_completions([self.adapter.create_message('system', profile),
                                                     self.adapter.create_message('user', message.content)])
             await message.channel.send(response)
         # ----------------------------------------------------------------------

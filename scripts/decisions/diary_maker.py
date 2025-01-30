@@ -2,13 +2,11 @@ from datetime import datetime
 from scripts.world_simulation.daily_event_maker import DailyEventMaker
 from scripts.adapters.hatena_entry_adapter import HatenaEntryAdapter
 from scripts.adapters.openai_adapter import OpenAIAdapter
-
+from scripts.file_manager import FileManager, FilePath
 
 class DiaryMaker:
     def __init__(self):
-        3
-        with open("storage/diary_maker_prompt.txt", "r", encoding="utf-8") as f:
-            self.system_prompt = f.read()
+        self.system_prompt = FileManager.read(FilePath.PROMPT_DIARY_MAKER)
     
     def __make(self):
         adapter = OpenAIAdapter()
