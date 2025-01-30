@@ -1,8 +1,6 @@
 import asyncio
-from scripts.memory.reflection import Emotion
 from scripts.world_simulation.world_time import WorldTime
 from datetime import datetime
-from scripts.memory.memory import LongTermMemory
 from scripts.adapters.openai_adapter import OpenAIAdapter
 from scripts.file_manager import FileManager, FilePath
 import numpy as np
@@ -15,32 +13,6 @@ class MemoryRecord:
         self.embedding: list[float] = []
         if not skip_embedding:
             self.embedding = adapter.create_embedding(self.message)
-
-class ShortTermMemory:
-    LTM_UPDATE_FREQUENCY = 20   # 何件の新しいことが起きたときに、短期記憶を長期記憶に保存するか
-    
-    def __init__(self, worldtime: WorldTime, long_term_memory: LongTermMemory, adapter: OpenAIAdapter):
-        self.memory_list: list[MemoryRecord] = []
-        self.worldtime: WorldTime
-        self.long_term_memory = long_term_memory
-        self.adapter = adapter
-        # self.__load_memory_from_file()
-
-    def __load_memory_from_file(self):
-        raise NotImplementedError
-
-    def add(self, message, skip_embedding=False):
-        memory_time = self.worldtime.current_time
-        self.memory_list.append(MemoryRecord(memory_time, message, self.adapter, skip_embedding))
-        if len(self.memory_list) % 20 == 0 and len(self.memory_list) > 0:
-            asyncio.to_thread(self.long_term_memory.process_batch(self.memory_list[-20:]))
-
-    def get_short_term_memory_str(self, num: int):
-        retrieved_memory = self.memory_list[-num:]
-        retrieved_memory_str = "アイリが直近にあったことの詳細："
-        for record in retrieved_memory:
-            retrieved_memory_str += f"\n{record.memory_time} {record.message}"
-        return retrieved_memory_str
 
 class LongTermMemory:
     def __init__(self, adapter: OpenAIAdapter):
@@ -100,3 +72,30 @@ class LongTermMemory:
         # Save embeddings into own memory_list and save to file
         self.memory_list.extend(memory_to_process)
         FileManager.write_json(FilePath.JSON_LONG_TERM_MEMORY, self.memory_list)
+
+class ShortTermMemory:
+    LTM_UPDATE_FREQUENCY = 20   # 何件の新しいことが起きたときに、短期記憶を長期記憶に保存するか
+    
+    def __init__(self, worldtime: WorldTime, long_term_memory: LongTermMemory, adapter: OpenAIAdapter):
+        self.memory_list: list[MemoryRecord] = []
+        self.worldtime = worldtime
+        self.long_term_memory = long_term_memory
+        self.adapter = adapter
+        # self.__load_memory_from_file()
+
+    def __load_memory_from_file(self):
+        raise NotImplementedError
+
+    def add(self, message, skip_embedding=False):
+        memory_time = self.worldtime.current_time
+        self.memory_list.append(MemoryRecord(memory_time, message, self.adapter, skip_embedding))
+        if len(self.memory_list) % 20 == 0 and len(self.memory_list) > 0:
+            asyncio.to_thread(self.long_term_memory.process_batch(self.memory_list[-20:]))
+        print("[SYSTEM]アイリのメモリに追加された:", message)
+
+    def get_short_term_memory_str(self, num: int):
+        retrieved_memory = self.memory_list[-num:]
+        retrieved_memory_str = "アイリが直近にあったことの詳細："
+        for record in retrieved_memory:
+            retrieved_memory_str += f"\n{record.memory_time} {record.message}"
+        return retrieved_memory_str

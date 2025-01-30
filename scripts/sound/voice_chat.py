@@ -7,11 +7,10 @@ from scripts.sound.VoiceMaker import VoiceMaker
 from scripts.sound.play_sound import PlaySound
 from scripts.adapters.openai_adapter import OpenAIAdapter
 from scripts.adapters.vtube_studio_adapter import VTSAdapter
-from scripts.memory.reflection import Emotion
 from scripts.utils.helpers import split_japanese_text
 from scripts.sound.VoiceMaker import StyleBertVits2Adapter
 from scripts.file_manager import FileManager, FilePath
-
+import re
 import os
 class VoiceChat:
     def __init__(self, adapter: OpenAIAdapter, voice_maker: VoiceMaker, play_sound: PlaySound, vts: VTSAdapter | None = None):
@@ -91,10 +90,10 @@ class VoiceChat:
                     if 'none' in response:
                         print("[アイリがあなたのメッセージを無視した]")
                     elif response is not None:
-                        token, text_raw = Emotion.parse_expression(response)
+                        token, text_raw = self.parse_expression(response)
                         text_list = split_japanese_text(text_raw)
-                        # response_voice = self.vits2.get_voice(text_list.pop(0))
-                        response_voice = self.voice_maker.make_voice_fish_audio(text_list.pop(0))
+                        response_voice = self.vits2.get_voice(text_list.pop(0))
+                        # response_voice = self.voice_maker.make_voice_fish_audio(text_list.pop(0))
                         if token and self.vts is not None:
                             for _, expression in self.vts.hotkeys.items():
                                 if expression == token:
@@ -122,6 +121,19 @@ class VoiceChat:
                     print(f"[Subprocess Error]: {line.strip()}")
                 elif self.process.poll() is not None:
                     break
+    
+    def parse_expression(eslf, input_text):
+        print("RAW TEXT:", input_text)
+        # Match the first occurrence of {token} anywhere in the text
+        match = re.search(r"\{(\w+)\}", input_text)
+        if match:
+            token = match.group(1)  # Extract the token inside {}
+            # Remove the token and the surrounding {} from the input text
+            text = re.sub(r"\{\w+\}", "", input_text).strip()
+            print("TOKEN:", token)
+            return token, text
+        return None, input_text
+    
 
 if __name__ == "__main__":
     adapter = OpenAIAdapter()

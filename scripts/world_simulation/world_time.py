@@ -8,7 +8,7 @@ from scripts.adapters.openai_adapter import OpenAIAdapter
 class WorldTime:
     def __init__(self,
                  adapter: OpenAIAdapter,
-                 start_time: datetime = datetime(2025, 4, 1, 0, 0), 
+                 start_time: datetime = datetime(2025, 4, 1, 6, 0), 
                  time_step: timedelta = timedelta(minutes=1.0),
                  ):
         self.adapter = adapter

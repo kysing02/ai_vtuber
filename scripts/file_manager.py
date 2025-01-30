@@ -18,6 +18,7 @@ class FilePath:
     PROMPT_THOUGHT = "storage/prompt/thought.txt"
     PROMPT_TWEET = "storage/prompt/tweet.txt"
     PROMPT_VOICE_CHAT = "storage/prompt/voice_chat.txt"
+    PROMPT_ASK = "storage/prompt/ask.txt"
 
 class FileManager:
     @staticmethod

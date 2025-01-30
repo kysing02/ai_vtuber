@@ -39,7 +39,9 @@ class Memo:
         memos_str = "アイリのメモ帳："
         for memo in memos:
             memos_str += f"\n{memo}"
+        return memos_str
 
-# Example usage:
-memo = Memo()
-print(memo.read_memo(2))  # Output: ['Buy groceries', 'Call John']
+if __file__ == "__main__":
+    # Example usage:
+    memo = Memo()
+    print(memo.read_memo(2))  # Output: ['Buy groceries', 'Call John']

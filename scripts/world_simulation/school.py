@@ -2,8 +2,6 @@ from pydantic import BaseModel
 from scripts.world_simulation.world_time import WorldTime, CallbackSchedule
 from scripts.adapters.openai_adapter import OpenAIAdapter
 from datetime import datetime
-import os
-import json
 import scripts.utils.helpers as utils
 from file_manager import FileManager, FilePath
 
@@ -128,7 +126,7 @@ class School:
     
     def get_school_events_str(self, datetime: datetime=None) -> str:
         school_events = self.get_school_events(datetime)
-        year = self.__get_annual_year(school_events)
+        year = self.__get_annual_year(datetime)
         school_events_str = f"{year}年の学校行事："
         
         for event in school_events.events:
@@ -142,26 +140,27 @@ class School:
             datetime = self.world_time.current_time
         year = self.__get_annual_year(datetime)
         school_events_data = FileManager.read_json(FilePath.JSON_SCHOOL_EVENTS.format(year=year))
-        return SchoolEvents(event=[SchoolEvent(**event) for event in school_events_data])
+        events = school_events_data.get("events", [])
+        return SchoolEvents(events=[SchoolEvent(**event) for event in events])
 
-    def get_school_event_today(self, datetime: datetime):
+    def get_school_event_today(self, datetime: datetime=None):
         school_events = self.get_school_events()
-        if datetime is None:
-            datetime = self.world_time.current_time
         for event in school_events.events:
             if event.day == datetime.day and event.month == datetime.month:
                 return event
         return None
     
-    def get_school_event_today_str(self, datetime: datetime):
+    def get_school_event_today_str(self, datetime: datetime=None):
         if datetime is None:
             datetime = self.world_time.current_time
         event_today = self.get_school_event_today(datetime)
         return f"{event_today.month}月{event_today.day}日の学校行事： {event_today.description}"
     
-    def __get_annual_year(self, datetime: datetime):
+    def __get_annual_year(self, datetime: datetime=None):
         # 4月以降の年度は今年、3月以前の年度は去年
         # 例. 2024.4 -> 2024, 2025.3 -> 2024
+        if datetime is None:
+            datetime = self.world_time.current_time
         return datetime.year if datetime.month >= 4 else datetime.year - 1
     
 if __name__ == "__main__":
