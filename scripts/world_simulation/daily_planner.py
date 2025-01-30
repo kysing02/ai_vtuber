@@ -3,7 +3,6 @@ from scripts.world_simulation.world_time import WorldTime
 from scripts.commands.queries import Queries
 from datetime import datetime
 from scripts.file_manager import FileManager, FilePath
-import os
 
 class DailyPlanner:
     def __init__(self, adapter: OpenAIAdapter, queries: Queries):

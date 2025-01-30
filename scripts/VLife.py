@@ -9,11 +9,11 @@ from scripts.world_simulation.daily_planner import DailyPlanner
 from scripts.world_simulation.school import School
 from scripts.commands.queries import Queries
 from scripts.commands.action_manager import ActionManager
+from scripts.memory.memo import Memo
 from scripts.memory.sensory_memory import SensoryMemory
 from scripts.adapters.hatena_entry_adapter import HatenaEntryAdapter
 from scripts.adapters.discord_adapter import DiscordBot
 from scripts.adapters.yahoo_news_adapter import YahooNews
-from scripts.memory.memo import Memo
 from scripts.file_manager import FileManager, FilePath
 
 class VLife:

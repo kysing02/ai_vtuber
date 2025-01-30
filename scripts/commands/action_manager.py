@@ -31,7 +31,6 @@ class ActStreaming(Action):
     name = "!STREAMING"
     description = "パソコンを使って、ライブ配信を開始する。"
     realtime = True
-
 class ActPostTwitter(Action):
     name = "!POST_TWITTER"
     description = "Twitterに新しい投稿をする。"
@@ -258,14 +257,14 @@ class ActionManager:
     
     async def take_action(self):
         # 今、一番したいことは？
-        prompt = self.queries.load_prompt_from_file(FilePath.PROMPT_COMMAND_ACTIONS)
+        prompt = self.queries.load_prompt_from_file(FilePath.PROMPT_ACT)
         decision = self.adapter.chat_completions([self.adapter.create_message('system', prompt),
                                        self.adapter.create_message('user', "一番したいこと:")])
+        
         # 今の考えを整理しよう
         
-        
         # 対応するコマンドを実行してください
-        prompt = self.queries.load_prompt_from_file(FilePath.PROMPT_ACTION_PROCESS)
+        prompt = self.queries.load_prompt_from_file(FilePath.PROMPT_ACT_PROCESS)
         command_list = self.adapter.chat_completions([self.adapter.create_message('system', prompt),
                                        self.adapter.create_message('user', decision)])
         

@@ -3,16 +3,19 @@ import json
 from pydantic import BaseModel
 
 class FilePath:
-    TEXT_DAILY_PLAN = "storage/daily_plan/{datestr}.txt"
+    TEXT_MEMO = "storage/airi/memo.txt"
+    TEXT_DAILY_PLAN = "storage/airi/daily_plan/{datestr}.txt"
     TEXT_PROFILE = "storage/airi/profile.txt"
     TEXT_TIMETABLE_TEMPLATE = "storage/year_schedule/school_timetable_template.txt"
     JSON_SCHOOL_EVENTS = "storage/year_schedule/school_events_{year}.json"
     JSON_TIMETABLE = "storage/year_schedule/school_timetable_{year}.json"
-    PROMPT_CHANGE_PLAN = "storage/system/prompt_change_plan.txt"
-    PROMPT_COMMAND_ACTIONS = "storage/commands/prompt_act.txt"
-    PROMPT_ACTION_PROCESS = "storage/commands/prompt_act_process.txt"
-    PROMPT_VOICE_CHAT = "storage/airi/voice_chat.txt"
-    PROMPT_DIARY_MAKER = "storage/prompt_diary_maker.txt"
+    PROMPT_ACT = "storage/prompt/act.txt"
+    PROMPT_ACT_PROCESS = "storage/prompt/act_process.txt"
+    PROMPT_CHANGE_PLAN = "storage/system/prompt/change_plan.txt"
+    PROMPT_DAILY_PLANNER = "storage/prompt/daily_planner.txt"
+    PROMPT_DIARY = "storage/prompt/diary.txt"
+    PROMPT_TWEET = "storage/prompt/tweet.txt"
+    PROMPT_VOICE_CHAT = "storage/prompt/voice_chat.txt"
 
 class FileManager:
     @staticmethod

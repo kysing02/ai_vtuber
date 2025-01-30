@@ -16,9 +16,10 @@ from scripts.sound.voice_chat import VoiceChat
 from scripts.adapters.vtube_studio_adapter import VTSAdapter
 from scripts.adapters.openai_adapter import OpenAIAdapter
 from scripts.file_manager import FileManager, FilePath
+from scripts.memory.sensory_memory import SensoryMemory
 
 class DiscordBot:
-    def __init__(self, voice_chat: VoiceChat, vts: VTSAdapter, adapter: OpenAIAdapter):
+    def __init__(self, voice_chat: VoiceChat, adapter: OpenAIAdapter, sensory_memory: SensoryMemory):
         # Configures intents
         intents = discord.Intents.default()
         intents.messages = True # Enable message event
@@ -30,7 +31,8 @@ class DiscordBot:
         self.client = discord.Client(intents=intents)
         self.voice_chat = voice_chat
         self.adapter = adapter
-        
+        self.sensory_memory = sensory_memory
+
         # Load the bot token
         self.token = os.getenv('DISCORD_BOT_TOKEN')
         self.guild_id = os.getenv('GUILD_ID')
@@ -44,8 +46,10 @@ class DiscordBot:
         # Airi specific parameters
         self.guild = None
         self.voice_channel = None
+        self.friends = None
 
     async def on_ready(self):
+        print("Loading ")
         print(f'{self.client.user} has connected to Discord!')
         self.guild: Guild = discord.utils.get(self.client.guilds, id=int(self.guild_id))
         print(f'{self.client.user} is connected to the guild: {self.guild.name} (id: {self.guild.id})')
@@ -135,12 +139,14 @@ if __name__ == "__main__":
     from scripts.sound.play_sound import PlaySound
     load_dotenv()
     vts = VTSAdapter()
+    adapter = OpenAIAdapter()
+    sensory_memory = SensoryMemory()
     if asyncio.run(vts.connect_auth()):
         voice_chat = VoiceChat(
-            adapter=OpenAIAdapter(),
+            adapter=adapter,
             voice_maker=VoiceMaker(),
             play_sound=PlaySound(),
             vts=vts
         )
-        bot = DiscordBot(voice_chat, vts, adapter=OpenAIAdapter())
+        bot = DiscordBot(voice_chat, adapter, sensory_memory)
         bot.run_bot()

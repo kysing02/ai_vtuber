@@ -6,7 +6,7 @@ from scripts.file_manager import FileManager, FilePath
 
 class DiaryMaker:
     def __init__(self):
-        self.system_prompt = FileManager.read(FilePath.PROMPT_DIARY_MAKER)
+        self.system_prompt = FileManager.read(FilePath.PROMPT_DIARY)
     
     def __make(self):
         adapter = OpenAIAdapter()
