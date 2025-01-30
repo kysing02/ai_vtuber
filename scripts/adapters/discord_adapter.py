@@ -16,10 +16,10 @@ from scripts.sound.voice_chat import VoiceChat
 from scripts.adapters.vtube_studio_adapter import VTSAdapter
 from scripts.adapters.openai_adapter import OpenAIAdapter
 from scripts.file_manager import FileManager, FilePath
-from scripts.memory.sensory_memory import SensoryMemory
+from scripts.memory.memory import ShortTermMemory
 
 class DiscordBot:
-    def __init__(self, voice_chat: VoiceChat, adapter: OpenAIAdapter, sensory_memory: SensoryMemory):
+    def __init__(self, voice_chat: VoiceChat, adapter: OpenAIAdapter, short_term_memory: ShortTermMemory):
         # Configures intents
         intents = discord.Intents.default()
         intents.messages = True # Enable message event
@@ -31,7 +31,7 @@ class DiscordBot:
         self.client = discord.Client(intents=intents)
         self.voice_chat = voice_chat
         self.adapter = adapter
-        self.sensory_memory = sensory_memory
+        self.short_term_memory = short_term_memory
 
         # Load the bot token
         self.token = os.getenv('DISCORD_BOT_TOKEN')
@@ -140,7 +140,7 @@ if __name__ == "__main__":
     load_dotenv()
     vts = VTSAdapter()
     adapter = OpenAIAdapter()
-    sensory_memory = SensoryMemory()
+    short_term_memory = ShortTermMemory()
     if asyncio.run(vts.connect_auth()):
         voice_chat = VoiceChat(
             adapter=adapter,
@@ -148,5 +148,5 @@ if __name__ == "__main__":
             play_sound=PlaySound(),
             vts=vts
         )
-        bot = DiscordBot(voice_chat, adapter, sensory_memory)
+        bot = DiscordBot(voice_chat, adapter, short_term_memory)
         bot.run_bot()

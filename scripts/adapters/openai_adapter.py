@@ -9,14 +9,19 @@ class Message(TypedDict):
 
 class OpenAIAdapter:
     MODEL_NAME = "gpt-4o-mini"
-    def __init__(self, model_name: str = MODEL_NAME):
-        self.client = OpenAI(api_key=os.getenv("OPEN_AI_KEY"))
+    def __init__(self, model_name: str = MODEL_NAME, use_deepseek: bool = False):
         self.MODEL_NAME = model_name
+        if use_deepseek:
+            self.client = OpenAI(api_key=os.getenv("DEEPSEEK_KEY"),
+                                 base_url="https://api.deepseek.com")
+        else:
+            self.client = OpenAI(api_key=os.getenv("OPEN_AI_KEY"))
 
     def chat_completions(self, messages: list[Message]):
         res = self.client.chat.completions.create(
             model=self.MODEL_NAME,
-            messages=messages
+            messages=messages,
+            stream=False
         )
         return res.choices[0].message.content
     
@@ -38,6 +43,13 @@ class OpenAIAdapter:
             raise Exception("answer is None")
         return answer
     
+    def create_embedding(self, text: str):
+        response = self.client.embeddings.create(
+            input=text,
+            model="text-embedding-3-small"
+        )
+        return response.data[0].embedding
+
     def create_message(self, role: Literal["system", "user", "assistant"], content: str) -> Message:
         return {"role": role, "content": content}
     

@@ -10,7 +10,7 @@ from scripts.world_simulation.school import School
 from scripts.commands.queries import Queries
 from scripts.commands.action_manager import ActionManager
 from scripts.memory.memo import Memo
-from scripts.memory.sensory_memory import SensoryMemory
+from scripts.memory.memory import ShortTermMemory
 from scripts.adapters.hatena_entry_adapter import HatenaEntryAdapter
 from scripts.adapters.discord_adapter import DiscordBot
 from scripts.adapters.yahoo_news_adapter import YahooNews
@@ -27,7 +27,7 @@ class VLife:
         self.queries = Queries(adapter=self.openai_adapter, vlife=self)
         self.daily_planner = DailyPlanner(adapter=self.openai_adapter, queries=self.queries)
         self.action_manager = ActionManager(adapter=self.openai_adapter, vlife=self)
-        self.sensory_memory = SensoryMemory()
+        self.short_term_memory = ShortTermMemory()
         self.twitter_adapter = TwitterAdapter()
         self.hatena_entry_adapter = HatenaEntryAdapter()
         self.discord_adapter = DiscordBot()
@@ -39,6 +39,7 @@ class VLife:
         self.school.make_year_schedule(year=self.world_time.current_time.year)
         # 一日の計画を立てる。一日の計画の更新は自動的ではなく、コマンド：起きるところから始める
         self.daily_planner.make_daily_plan(day=self.world_time.current_time.day)
+        self.short_term_memory.add("アイリが今日の予定を立てた。良い日をー！")
         # システムを開始
         while True:
             await self.action_manager.take_action()

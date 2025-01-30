@@ -1,5 +1,4 @@
 from scripts.file_manager import FileManager
-from scripts.adapters.openai_adapter import OpenAIAdapter
 from scripts.vlife import VLife
 
 # クエリはシステム権限のみアクセスできる
@@ -7,8 +6,7 @@ class Queries:
     PREDEFINED_QUERIES = [
         "PROFILE",
         "SCHOOL_EVENTS",
-        "TIMETABLE",
-        "SENSORY_MEMORY",
+        "TIMETABLE"
         "LONG_TERM_MEMORY",
         "SHORT_TERM_MEMORY",
         "MEMO_APP",
@@ -19,20 +17,17 @@ class Queries:
     def __init__(self, vlife: VLife):
         self.vlife = vlife
 
-    def get_available_queries():
-        raise NotImplementedError
-
     def parse(self, text: str):
         replacements = {
             "!PROFILE": VLife.get_profile,
             "!SCHOOL_EVENTS": self.vlife.school.get_school_events_str,
             "!TIMETABLE": self.vlife.school.get_timetable_str,
-            "!SENSORY_MEMORY": self.vlife.sensory_memory,
             "!LONG_TERM_MEMORY": "Past Memory",
-            "!SHORT_TERM_MEMORY": "Recent Memory",
-            "!MEMO_APP": lambda: self.vlife.memo.read_memo(5),
+            "!SHORT_TERM_MEMORY": lambda: self.vlife.short_term_memory.get_short_term_memory_str(10),
+            "!MEMO_APP": lambda: self.vlife.memo.read_memos_str(5),
             "!DATETIME": self.vlife.world_time.get_time_str,
             "!THOUGHTS": "Daily Reflections",
+            "!AVAILABLE_ACTIONS": self.vlife.action_manager.get_available_actions_str
         }
         # Replace placeholders, calling functions only when needed
         for key, value in replacements.items():

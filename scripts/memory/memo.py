@@ -33,6 +33,12 @@ class Memo:
             return self.memos[-num:]
         else:
             return self.memos
+        
+    def read_memos_str(self, num: int=None):
+        memos = self.read_memo(num)
+        memos_str = "アイリのメモ帳："
+        for memo in memos:
+            memos_str += f"\n{memo}"
 
 # Example usage:
 memo = Memo()

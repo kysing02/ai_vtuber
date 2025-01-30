@@ -1,4 +1,5 @@
 import re
+from file_manager import FileManager, FilePath
 
 class Emotion:
     @staticmethod
@@ -15,5 +16,8 @@ class Emotion:
         return None, input_text
     
 class Reflection:
-    def __init__(self):
-        raise NotImplementedError
+    def __init__(self, ):
+        pass
+    
+    def reflect_thought(self):
+        
