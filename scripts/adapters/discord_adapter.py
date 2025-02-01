@@ -8,17 +8,16 @@ import asyncio
 import threading
 from discord.ext import commands
 from discord.message import Message
-from discord.guild import Guild
-from discord.channel import VoiceChannel, DMChannel
 from discord.member import Member
 from discord import PCMVolumeTransformer, FFmpegPCMAudio
 from dotenv import load_dotenv
 from scripts.sound.voice_chat import VoiceChat
 from scripts.adapters.vtube_studio_adapter import VTSAdapter
 from scripts.adapters.openai_adapter import OpenAIAdapter
-from scripts.file_manager import FileManager, FilePath
 from scripts.memory.memory import ShortTermMemory
 from scripts.commands.action_manager import ActionManager
+from scripts.world_simulation.messenger import Messenger
+
 class DiscordBot:
     def __init__(self, voice_chat: VoiceChat, adapter: OpenAIAdapter, short_term_memory: ShortTermMemory, action_manager: ActionManager):
         # Configures intents
@@ -30,6 +29,8 @@ class DiscordBot:
 
         # Initialize the client
         self.client = discord.Client(intents=intents)
+
+        # To pass to the messenger
         self.voice_chat = voice_chat
         self.adapter = adapter
         self.short_term_memory = short_term_memory
@@ -37,85 +38,79 @@ class DiscordBot:
 
         # Load the bot token
         self.token = os.getenv('DISCORD_BOT_TOKEN')
-        self.guild_id = os.getenv('GUILD_ID')
-        self.voice_channel_name = os.getenv('VOICE_CHANNEL_NAME')
-        self.dev_dm_id = os.getenv('DEV_DM_ID')
         
         # Register events
         self.client.event(self.on_ready)
         self.client.event(self.on_message)
-        self.client.event(self.on_member_join)
-
-        # Airi specific parameters
-        self.guild = None
-        self.voice_channel = None
-        self.friends = []
-        self.dev_dm_channel = None
+        # self.client.event(self.on_member_join)
         
+        self.task_future = None
+
     async def on_ready(self):
+        self.task_future = asyncio.Future()
+        # Initialize messenger class
+        self.messenger = Messenger(self.voice_chat, self.adapter, self.short_term_memory, self.action_manager)
+
         print("Loading ")
         print(f'{self.client.user} has connected to Discord!')
-        self.guild: Guild = discord.utils.get(self.client.guilds, id=int(self.guild_id))
-        print(f'{self.client.user} is connected to the guild: {self.guild.name} (id: {self.guild.id})')
-        self.voice_channel: VoiceChannel = discord.utils.get(self.guild.voice_channels, name=self.voice_channel_name)
-        # Check guild members
-        members = '\n - '.join([member.name for member in self.guild.members])
-        print(f'Guild Members:\n - {members}')
+        self.messenger.user = self.client.user
+        self.messenger.guild = discord.utils.get(self.client.guilds, id=int(self.messenger.guild_id))
+        print(f'{self.client.user} is connected to the guild: {self.messenger.guild.name} (id: {self.messenger.guild_id})')
+        self.messenger.voice_channel = discord.utils.get(self.messenger.guild.voice_channels, name=self.messenger.voice_channel_name)
         
-        # Set the bot to appear offline
-        await self.set_invisible()
+        # Check guild members
+        members = '\n - '.join([member.name for member in self.messenger.guild.members])
+        print(f'Guild Members:\n - {members}')
+        await self.messenger.add_guild_members()
 
     async def on_message(self, message: Message):
         # Ignore bot's own messages
         if message.author == self.client.user:
             return
-        self.short_term_memory.add(f"スマホに1件の通知が来ました:\n[{message.author.global_name}] {message.content}")
-        # Check if the message is a DM
-        if isinstance(message.channel, discord.DMChannel):
-            print("[DEBUG] Received a DM")
-            if message.channel.id == int(self.dev_dm_id):
-                self.dev_dm_channel = message.channel
-                print("[DEBUG] Developer DM channel set:", self.dev_dm_channel)
-                self.short_term_memory.add("スマホのチャットに[シン]が追加された。")
-                if message.channel not in self.friends:
-                    self.friends.append(message.channel)
 
-        self.action_manager.ask(f"[{message.author.global_name}]からの返信が来ました。どうしますか？")
+        # System level commands (only allow for dev user)
 
-        # Handle public messages
-        if message.content == "!msg":
-            response = "This is a test message."
-            await message.channel.send(response)
-        
-        # System level commands-------------------------------------------------
-        if message.content == "!voice_join":
-            await self.join_voice_chat()
+        print(message.author.dm_channel.id)
+        print(self.messenger.dev_dm_id)
+        if message.author.dm_channel.id == self.messenger.dev_dm_id:
+            if message.content == "!voice_join":
+                await self.messenger.join_voice_chat()
 
-        elif message.content == "!voice_leave":
-            await self.leave_voice_chat()
-        
-        elif message.content == "!force_end":
-            raise KeyboardInterrupt
-        
-        elif message.content == "!invisible":
-            await self.set_invisible()
-        
-        elif message.content == "!online":
-            await self.set_online()
+            elif message.content == "!voice_leave":
+                await self.messenger.leave_voice_chat()
+            
+            elif message.content == "!force_end":
+                await self.client.close()
+                raise KeyboardInterrupt
+            
+            elif message.content == "!invisible":
+                await self.set_invisible()
+            
+            elif message.content == "!online":
+                await self.set_online()
 
-        # else:
-        #     profile = FileManager.read(FilePath.PROMPT_VOICE_CHAT)
-        #     response = self.adapter.chat_completions([self.adapter.create_message('system', profile),
-        #                                             self.adapter.create_message('user', message.content)])
-        #     await message.channel.send(response)
-        # ----------------------------------------------------------------------
+            elif message.content == "!msg":
+                await message.channel.send("This is a test message.")
+                await self.messenger.send_dm("Hello", None)
         
+        # Check if this is private DM channel (Now Airi-chan only receive DM Messages - for sake of simplicity)
+        if message.channel.id == message.author.dm_channel.id:
+            await self.messenger.receive_dm(message)
+        else:
+            pass
+             
         # Handle other messages
         print("Received:", message)
 
-    async def send_message(self, message, channel=None):
-        if channel==None:
-            await self.dev_dm_channel.send(message)
+    async def send_dm(self, message, name=None):
+        if name is None:
+            if self.messenger.dev_dm_channel is None:
+                print("ERROR: dev_dm_channel is not set!")
+                return
+            print(f"DEBUG: {self.messenger.dev_dm_channel}")
+            await self.messenger.dev_dm_channel.send(message)
+        if self.task_future:  # If future exists, mark it as done
+            self.task_future.set_result("Task completed successfully!")
 
     async def set_invisible(self):
         await self.client.change_presence(status=discord.Status.invisible)
@@ -125,36 +120,20 @@ class DiscordBot:
         await self.client.change_presence(status=discord.Status.online)
         print(f'{self.client.user} is now online.')
 
-    async def on_member_join(self, member: Member):
-        await member.create_dm()
-        await member.dm_channel.send(
-            f'Hi {member.name}, welcome to my Discord server!'
-        )
+    # async def on_member_join(self, member: Member):
+    #     await member.create_dm()
+    #     await member.dm_channel.send(f'Hi {member.name}, welcome to my Discord server!')
 
-    # Functions to control bot--------------------------------------------------
-    async def join_voice_chat(self):
-        vc = await self.voice_channel.connect()
-        print(f"Joined {self.voice_channel.name}")
-        # Start the voice chat session
-        await self.voice_chat.start()
-
-    async def leave_voice_chat(self):
-        if self.guild.voice_client:
-            # Stop the VoiceChat session
-            await self.voice_chat.end()
-
-            # Disconnect the bot from the voice channel
-            await self.guild.voice_client.disconnect()
-            print(f"Left the voice channel.")
-        else:
-            print(f"I'm not in voice channel!")
-    # --------------------------------------------------------------------------
     def run_bot(self):
         self.client.run(self.token)
 
     def run_bot_in_thread(self):
-        bot_thread = threading.Thread(target=self.run_bot)
+        bot_thread = threading.Thread(target=self.run_bot, daemon=True)
         bot_thread.start()
+
+    def schedule_task(self, coro):
+        """Safely schedule a coroutine in the bot's event loop."""
+        return asyncio.run_coroutine_threadsafe(coro, self.client.loop)
 
 if __name__ == "__main__":
     from scripts.sound.voice_chat import VoiceChat
@@ -164,7 +143,6 @@ if __name__ == "__main__":
     load_dotenv()
     vts = VTSAdapter()
     adapter = OpenAIAdapter()
-    short_term_memory = ShortTermMemory()
     if asyncio.run(vts.connect_auth()):
         voice_chat = VoiceChat(
             adapter=adapter,
@@ -172,5 +150,8 @@ if __name__ == "__main__":
             play_sound=PlaySound(),
             vts=vts
         )
-        bot = DiscordBot(voice_chat, adapter, short_term_memory)
-        bot.run_bot()
+        bot = DiscordBot(voice_chat, adapter, None, None)
+        bot.run_bot_in_thread()
+        import time
+        time.sleep(5)
+        bot.schedule_task(bot.send_dm("こんにちはー"))

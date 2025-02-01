@@ -8,7 +8,9 @@ class VoiceIO(TypedDict):
     sample_rate: int
 
 class PlaySound:
-    def __init__(self, output_device_name="CABLE Input") -> None:
+    def __init__(self, output_device_name=None) -> None:
+        if output_device_name == None:
+            return
         # 指定された出力デバイス名に基づいてデバイスIDを取得
         output_device_id = self._search_output_device_id(output_device_name)
         # 入力デバイスIDは使用しないため、デフォルトの0を設定

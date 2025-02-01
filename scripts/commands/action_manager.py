@@ -1,12 +1,12 @@
 import re
 from scripts.commands.action import *
-from file_manager import FilePath
+from scripts.file_manager import FilePath
 if TYPE_CHECKING:
     from scripts.vlife import VLife
 
 # アクションはAIVTuber向けインターフェース
 class ActionManager:
-    PREDEFINED_ACTIONS: list[Action] = [
+    predefined_actions: list[Action] = [
         # ActStreaming,
         ActPostTwitter,
         ActWriteDiary,
@@ -24,7 +24,7 @@ class ActionManager:
         ActCheckDateTime,
         ActSleepTillTomorrow,
         ActChatDeveloper,
-        # ActCheckDeveloperChat,
+        ActCheckDeveloperChat,
         ActNew
     ]
     
@@ -33,11 +33,12 @@ class ActionManager:
         self.queries = vlife.queries
         self.adapter = vlife.openai_adapter
         self.reflection = vlife.reflection
+        self.in_action = False
         # self.all_actions = ActionManager.PREDEFINED_ACTIONS.append(self.__load_saved_actions())
 
     def get_available_actions_str(self):
         available_actions = "今実行できるコマンドのリスト：\n"
-        for action in ActionManager.PREDEFINED_ACTIONS:
+        for action in ActionManager.predefined_actions:
             available_actions = available_actions + f"{action.name} : {action.description}\n"
         return available_actions
     
@@ -66,13 +67,15 @@ class ActionManager:
     async def take_action(self):
         # 今の考えを整理しよう
         thought = self.reflection.reflect_thought()
-        print("[SYSTEM]アイリが今考えていること：", thought)
+        print("[今の考え事]", thought)
 
         # 今、一番したいことは？
         prompt = self.queries.load_prompt_from_file(FilePath.PROMPT_ACT)
-        decision = self.adapter.chat_completions([self.adapter.create_message('system', prompt),
-                                       self.adapter.create_message('user', "一番したいこと:")])
-        print("[SYSTEM]アイリが今一番したいこと：", decision)
+        prompt_message_gpt = self.adapter.create_message('system', prompt)
+        past_history = self.vlife.short_term_memory.get_short_term_memory(50)
+        past_history.insert(0, prompt_message_gpt)
+        decision = self.adapter.chat_completions(past_history)
+        await self.vlife.short_term_memory.add(decision, role='assistant')
 
         # 対応するコマンドを実行してください
         prompt = self.queries.load_prompt_from_file(FilePath.PROMPT_ACT_PROCESS)
@@ -80,24 +83,33 @@ class ActionManager:
                                        self.adapter.create_message('user', decision)])
 
         # 対応するコマンドに応じて行動を取る
-        print("[SYSTEM]出力されたコマンド：", command_list)
+        # print("[SYSTEM]出力されたコマンド：", command_list)
 
         action_list = self.parse(command_list)
 
         print("[SYSTEM]検出されたコマンド：", action_list)
+        await self.find_match_action(action_list)
+
+    async def find_match_action(self, action_list):
         for action, desc in action_list:
             if action == ActNew.name:
+                if ActNew not in ActionManager.predefined_actions:
+                    return
                 # 一番目のアクションだけ実行する
                 perform = ActNew(self.vlife)
-                await perform.execute(desc)
-                await perform.end()
+                if not self.in_action:
+                    self.in_action = True
+                    await perform.execute(desc)
+                    await perform.end()
+                    self.in_action = False
+                break
             elif action == ActChatDeveloper.name:
                 perform = ActChatDeveloper(self.vlife)
                 await perform.execute(desc)
                 await perform.end()
             else:
                 # すべてのコマンドを実行する
-                for predefined_act in ActionManager.PREDEFINED_ACTIONS:
+                for predefined_act in ActionManager.predefined_actions:
                     if action == predefined_act.name:
                         perform: Action = predefined_act(self.vlife)
                         await perform.execute()
@@ -108,3 +120,9 @@ class ActionManager:
         reply = self.adapter.chat_completions([self.adapter.create_message('system', prompt),
                                                self.adapter.create_message('user', question)])
         return reply
+    
+if __name__ == "__main__":
+    string_to_parse = "{!CHECK_CHAT_DEVELOPER}"
+    action_manager = ActionManager(None)
+    action_list = action_manager.parse(string_to_parse)
+    print(action_list)

@@ -12,6 +12,7 @@ class FilePath:
     JSON_LONG_TERM_MEMORY = "storage/airi/memory/long_term_memory.txt"
     PROMPT_ACT = "storage/prompt/act.txt"
     PROMPT_ACT_PROCESS = "storage/prompt/act_process.txt"
+    PROMPT_ACT_PROCESS_NEW = "storage/prompt/act_process_new.txt"
     PROMPT_CHANGE_PLAN = "storage/prompt/change_plan.txt"
     PROMPT_DAILY_PLANNER = "storage/prompt/daily_planner.txt"
     PROMPT_DIARY = "storage/prompt/diary.txt"
@@ -19,6 +20,7 @@ class FilePath:
     PROMPT_TWEET = "storage/prompt/tweet.txt"
     PROMPT_VOICE_CHAT = "storage/prompt/voice_chat.txt"
     PROMPT_ASK = "storage/prompt/ask.txt"
+    PROMPT_EVENT_SIMULATOR = "storage/prompt/event_simulator.txt"
 
 class FileManager:
     @staticmethod

@@ -13,10 +13,10 @@ from scripts.file_manager import FileManager, FilePath
 import re
 import os
 class VoiceChat:
-    def __init__(self, adapter: OpenAIAdapter, voice_maker: VoiceMaker, play_sound: PlaySound, vts: VTSAdapter | None = None):
+    def __init__(self, adapter: OpenAIAdapter, vits2: StyleBertVits2Adapter, play_sound: PlaySound, vts: VTSAdapter | None = None):
         self.adapter = adapter
-        self.voice_maker = voice_maker
-        self.vits2 = StyleBertVits2Adapter() # 高速化のためにモデルを先にロードする（voice_makerの代わりに）
+        # self.voice_maker = voice_maker
+        self.vits2 = vits2 # 高速化のためにモデルを先にロードする（voice_makerの代わりに）
         self.play_sound = play_sound
         self.process = None
         self.talk_history: list[dict[str, str]] = []
@@ -26,8 +26,8 @@ class VoiceChat:
 
     def __run_asr(self):
         return subprocess.Popen(
-            [sys.executable, 'scripts/sound/asr.py', '--use_api', 'True'],
-            # [sys.executable, 'scripts/sound/asr.py'],
+            # [sys.executable, 'scripts/sound/asr.py', '--use_api', 'True'],
+            [sys.executable, 'scripts/sound/asr.py'],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
@@ -122,7 +122,7 @@ class VoiceChat:
                 elif self.process.poll() is not None:
                     break
     
-    def parse_expression(eslf, input_text):
+    def parse_expression(self, input_text):
         print("RAW TEXT:", input_text)
         # Match the first occurrence of {token} anywhere in the text
         match = re.search(r"\{(\w+)\}", input_text)
@@ -137,8 +137,8 @@ class VoiceChat:
 
 if __name__ == "__main__":
     adapter = OpenAIAdapter()
-    voice_maker = VoiceMaker()
+    # voice_maker = VoiceMaker()
     play_sound = PlaySound()
     vts_adapter = VTSAdapter()
-    voice_realtime = VoiceChat(adapter, voice_maker, play_sound, vts_adapter)
-    asyncio.run(voice_realtime.start())
+    # voice_realtime = VoiceChat(adapter, voice_maker, play_sound, vts_adapter)
+    # asyncio.run(voice_realtime.start())
