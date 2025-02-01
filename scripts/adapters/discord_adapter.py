@@ -5,10 +5,11 @@ import tempfile
 import wave
 import discord
 import asyncio
+import threading
 from discord.ext import commands
 from discord.message import Message
 from discord.guild import Guild
-from discord.channel import VoiceChannel
+from discord.channel import VoiceChannel, DMChannel
 from discord.member import Member
 from discord import PCMVolumeTransformer, FFmpegPCMAudio
 from dotenv import load_dotenv
@@ -17,9 +18,9 @@ from scripts.adapters.vtube_studio_adapter import VTSAdapter
 from scripts.adapters.openai_adapter import OpenAIAdapter
 from scripts.file_manager import FileManager, FilePath
 from scripts.memory.memory import ShortTermMemory
-
+from scripts.commands.action_manager import ActionManager
 class DiscordBot:
-    def __init__(self, voice_chat: VoiceChat, adapter: OpenAIAdapter, short_term_memory: ShortTermMemory):
+    def __init__(self, voice_chat: VoiceChat, adapter: OpenAIAdapter, short_term_memory: ShortTermMemory, action_manager: ActionManager):
         # Configures intents
         intents = discord.Intents.default()
         intents.messages = True # Enable message event
@@ -32,11 +33,13 @@ class DiscordBot:
         self.voice_chat = voice_chat
         self.adapter = adapter
         self.short_term_memory = short_term_memory
+        self.action_manager = action_manager
 
         # Load the bot token
         self.token = os.getenv('DISCORD_BOT_TOKEN')
         self.guild_id = os.getenv('GUILD_ID')
         self.voice_channel_name = os.getenv('VOICE_CHANNEL_NAME')
+        self.dev_dm_id = os.getenv('DEV_DM_ID')
         
         # Register events
         self.client.event(self.on_ready)
@@ -46,8 +49,9 @@ class DiscordBot:
         # Airi specific parameters
         self.guild = None
         self.voice_channel = None
-        self.friends = None
-
+        self.friends = []
+        self.dev_dm_channel = None
+        
     async def on_ready(self):
         print("Loading ")
         print(f'{self.client.user} has connected to Discord!')
@@ -65,6 +69,18 @@ class DiscordBot:
         # Ignore bot's own messages
         if message.author == self.client.user:
             return
+        self.short_term_memory.add(f"スマホに1件の通知が来ました:\n[{message.author.global_name}] {message.content}")
+        # Check if the message is a DM
+        if isinstance(message.channel, discord.DMChannel):
+            print("[DEBUG] Received a DM")
+            if message.channel.id == int(self.dev_dm_id):
+                self.dev_dm_channel = message.channel
+                print("[DEBUG] Developer DM channel set:", self.dev_dm_channel)
+                self.short_term_memory.add("スマホのチャットに[シン]が追加された。")
+                if message.channel not in self.friends:
+                    self.friends.append(message.channel)
+
+        self.action_manager.ask(f"[{message.author.global_name}]からの返信が来ました。どうしますか？")
 
         # Handle public messages
         if message.content == "!msg":
@@ -87,15 +103,19 @@ class DiscordBot:
         elif message.content == "!online":
             await self.set_online()
 
-        else:
-            profile = FileManager.read(FilePath.PROMPT_VOICE_CHAT)
-            response = self.adapter.chat_completions([self.adapter.create_message('system', profile),
-                                                    self.adapter.create_message('user', message.content)])
-            await message.channel.send(response)
+        # else:
+        #     profile = FileManager.read(FilePath.PROMPT_VOICE_CHAT)
+        #     response = self.adapter.chat_completions([self.adapter.create_message('system', profile),
+        #                                             self.adapter.create_message('user', message.content)])
+        #     await message.channel.send(response)
         # ----------------------------------------------------------------------
         
         # Handle other messages
         print("Received:", message)
+
+    async def send_message(self, message, channel=None):
+        if channel==None:
+            await self.dev_dm_channel.send(message)
 
     async def set_invisible(self):
         await self.client.change_presence(status=discord.Status.invisible)
@@ -131,6 +151,10 @@ class DiscordBot:
     # --------------------------------------------------------------------------
     def run_bot(self):
         self.client.run(self.token)
+
+    def run_bot_in_thread(self):
+        bot_thread = threading.Thread(target=self.run_bot)
+        bot_thread.start()
 
 if __name__ == "__main__":
     from scripts.sound.voice_chat import VoiceChat

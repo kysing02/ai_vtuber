@@ -12,7 +12,7 @@ class FilePath:
     JSON_LONG_TERM_MEMORY = "storage/airi/memory/long_term_memory.txt"
     PROMPT_ACT = "storage/prompt/act.txt"
     PROMPT_ACT_PROCESS = "storage/prompt/act_process.txt"
-    PROMPT_CHANGE_PLAN = "storage/system/prompt/change_plan.txt"
+    PROMPT_CHANGE_PLAN = "storage/prompt/change_plan.txt"
     PROMPT_DAILY_PLANNER = "storage/prompt/daily_planner.txt"
     PROMPT_DIARY = "storage/prompt/diary.txt"
     PROMPT_THOUGHT = "storage/prompt/thought.txt"

@@ -130,7 +130,7 @@ class ActMakeMemo(Action):
     async def execute(self):
         self.short_term_memory.add("アイリがスマホアプリにメモを書いた。")
         memo = self.vlife.memo
-        content = self.action_manager.ask("メモアプリを開いた。なにを記録しますか？")
+        content = self.action_manager.ask("メモアプリを開いた。なにを記録しますか(20文字程度)？")
         memo.write_memo(content)
         self.short_term_memory.add(f"アイリがスマホアプリでメモをした：\n{content}")
 
@@ -182,14 +182,15 @@ class ActSleepTillTomorrow(Action):
     
 class ActChatDeveloper(Action):
     name = "!CHAT_DEVELOPER"
-    description = "アイリの開発者、シンにチャットを送信する"
-    async def execute(self):
-        pass
+    description = "アイリの開発者、シンにチャットを送信する {!CHAT_DEVELOPER アイリが話して内容そのままを送ってください}"
+    async def execute(self, message):
+        await self.vlife.discord_adapter.send_message(message)
+        
 class ActCheckDeveloperChat(Action):
     name = "!CHECK_CHAT_DEVELOPER"
     description = "アイリの開発者、シンからもらったチャットメッセージを見る"
     async def execute(self):
-        pass
+        self.vlife.discord_adapter
 
 class ActNew(Action):
     name = "!NEW_ACTION"
@@ -197,7 +198,7 @@ class ActNew(Action):
     
     async def execute(self, info):
         # TODO Implement real logic
-        self.short_term_memory.add("アイリが楽しい時間を過ごした：\n", info)
+        self.short_term_memory.add(f"アイリが楽しい時間を過ごした：\n{info}")
         await asyncio.sleep(10)
 
 if __name__ == "__main__":

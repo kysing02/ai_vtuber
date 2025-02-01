@@ -13,12 +13,12 @@ class Memo:
     def _load_memos(self):
         """Load memos from the file into the list."""
         if os.path.exists(self.memo_file):
-            with open(self.memo_file, 'r') as file:
+            with open(self.memo_file, 'r', encoding='utf-8') as file:
                 self.memos = [line.strip() for line in file.readlines()]
 
     def _save_memos(self):
         """Save the current list of memos to the file."""
-        with open(self.memo_file, 'w') as file:
+        with open(self.memo_file, 'w', encoding='utf-8') as file:
             for memo in self.memos:
                 file.write(memo + '\n')
 

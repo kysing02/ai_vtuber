@@ -4,7 +4,7 @@ from datetime import datetime
 from scripts.adapters.openai_adapter import OpenAIAdapter
 from scripts.file_manager import FileManager, FilePath
 import numpy as np
-
+from scripts.adapters.obs_adapter import OBSAdapter
 class MemoryRecord:
     def __init__(self, memory_time: datetime, message: str, adapter: OpenAIAdapter, skip_embedding=False):
         self.memory_time = memory_time
@@ -74,13 +74,14 @@ class LongTermMemory:
         FileManager.write_json(FilePath.JSON_LONG_TERM_MEMORY, self.memory_list)
 
 class ShortTermMemory:
-    LTM_UPDATE_FREQUENCY = 20   # 何件の新しいことが起きたときに、短期記憶を長期記憶に保存するか
+    LTM_UPDATE_FREQUENCY = 1000   # 何件の新しいことが起きたときに、短期記憶を長期記憶に保存するか
     
-    def __init__(self, worldtime: WorldTime, long_term_memory: LongTermMemory, adapter: OpenAIAdapter):
+    def __init__(self, worldtime: WorldTime, long_term_memory: LongTermMemory, adapter: OpenAIAdapter, obs: OBSAdapter):
         self.memory_list: list[MemoryRecord] = []
         self.worldtime = worldtime
         self.long_term_memory = long_term_memory
         self.adapter = adapter
+        self.obs = obs
         # self.__load_memory_from_file()
 
     def __load_memory_from_file(self):
@@ -90,8 +91,9 @@ class ShortTermMemory:
         memory_time = self.worldtime.current_time
         self.memory_list.append(MemoryRecord(memory_time, message, self.adapter, skip_embedding))
         if len(self.memory_list) % 20 == 0 and len(self.memory_list) > 0:
-            asyncio.to_thread(self.long_term_memory.process_batch(self.memory_list[-20:]))
+            asyncio.run(asyncio.to_thread(self.long_term_memory.process_batch(self.memory_list[-20:])))
         print("[SYSTEM]アイリのメモリに追加された:", message)
+        self.obs.set_answer(message)
 
     def get_short_term_memory_str(self, num: int):
         retrieved_memory = self.memory_list[-num:]

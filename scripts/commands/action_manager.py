@@ -23,7 +23,7 @@ class ActionManager:
         ActChangeTodayPlan,
         ActCheckDateTime,
         ActSleepTillTomorrow,
-        # ActChatDeveloper,
+        ActChatDeveloper,
         # ActCheckDeveloperChat,
         ActNew
     ]
@@ -80,6 +80,8 @@ class ActionManager:
                                        self.adapter.create_message('user', decision)])
 
         # 対応するコマンドに応じて行動を取る
+        print("[SYSTEM]出力されたコマンド：", command_list)
+
         action_list = self.parse(command_list)
 
         print("[SYSTEM]検出されたコマンド：", action_list)
@@ -87,6 +89,10 @@ class ActionManager:
             if action == ActNew.name:
                 # 一番目のアクションだけ実行する
                 perform = ActNew(self.vlife)
+                await perform.execute(desc)
+                await perform.end()
+            elif action == ActChatDeveloper.name:
+                perform = ActChatDeveloper(self.vlife)
                 await perform.execute(desc)
                 await perform.end()
             else:

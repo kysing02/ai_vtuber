@@ -33,8 +33,10 @@ class WorldTime:
             time.sleep(1)
 
     def get_time_str(self) -> str:
-        return self.current_time.strftime("%Y年%m月%d日 %H時%M分")
-    
+            current_time_str = self.current_time.strftime("%Y年%m月%d日 (%p)%I時%M分")
+            current_time_str.replace("AM", "午前").replace("PM", "午後")
+            return current_time_str
+
     def proceed_time(self, steps: timedelta = None):
         if steps is None:
             steps = self.time_step
