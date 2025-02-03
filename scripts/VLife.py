@@ -50,7 +50,10 @@ class VLife:
             adapter=self.openai_adapter,
             vits2=self.vits2,
             play_sound=self.play_sound,
-            vts=self.vts
+            vts=self.vts,
+            action_manager=self.action_manager,
+            memory=self.short_term_memory,
+            queries=self.queries
         )
         self.discord = DiscordBot(self.voice_chat, self.openai_adapter, self.short_term_memory, self.action_manager)
         self.discord.run_bot_in_thread()
@@ -71,9 +74,17 @@ class VLife:
     def get_profile():
         profile = FileManager.read(FilePath.TEXT_PROFILE)
         return profile
-    
-if __name__ == '__main__':
+
+async def main():
     load_dotenv()
-    loop = asyncio.get_event_loop()
     vlife = VLife()
-    loop.run_until_complete(vlife.start())
+    await vlife.start()
+
+if __name__ == "__main__":
+    asyncio.run(main())  # Use
+
+# if __name__ == '__main__':
+#     load_dotenv()
+#     loop = asyncio.get_event_loop()
+#     vlife = VLife()
+#     loop.run_until_complete(vlife.start())

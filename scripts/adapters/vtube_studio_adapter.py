@@ -3,6 +3,7 @@ import json
 import websockets
 import uuid
 import os
+from dotenv import load_dotenv
 
 class VTSAdapter:
     hotkeys = {
@@ -21,24 +22,29 @@ class VTSAdapter:
         self.plugin_name = "AI VTuber"
         self.plugin_developer = "NonStopBeat"
         self.token = os.getenv("VTS_AUTHENTICATION_TOKEN")
+        self.heartbeat_task = None
 
     async def connect_auth(self):
+        """Connect to VTube Studio and authenticate."""
         if await self.__connect():
             if await self.__authenticate():
                 return True
+        return False
 
     async def __connect(self):
+        """Establish a WebSocket connection to VTube Studio."""
         try:
             self.ws = await websockets.connect(self.uri)
-            asyncio.create_task(self.send_heartbeat())
             print("Connected to VTube Studio.")
+            # Start the heartbeat task
+            self.heartbeat_task = asyncio.create_task(self.send_heartbeat())
             return True
         except ConnectionRefusedError:
             print("Error: Could not connect to VTube Studio. Make sure it's running and the API is enabled.")
             return False
-        return True
 
     async def __authenticate(self):
+        """Authenticate with VTube Studio."""
         auth_request = {
             "apiName": "VTubeStudioPublicAPI",
             "apiVersion": "1.0",
@@ -69,41 +75,72 @@ class VTSAdapter:
                             If None, triggers all hotkeys.
         """
         print(hotkey_name, "triggered.")
-        if hotkey_name:
-            # Find the hotkey ID by name
-            hotkey_id = next((key for key, name in self.hotkeys.items() if name == hotkey_name), None)
-            if hotkey_id:
-                request = {
-                    "apiName": "VTubeStudioPublicAPI",
-                    "apiVersion": "1.0",
-                    "requestID": f"HotkeyRequest_{hotkey_id}",
-                    "messageType": "HotkeyTriggerRequest",
-                    "data": {
-                        "hotkeyID": hotkey_name,
-                        "excludedParameters": ["MouthOpen", "MouthForm"]
-                    }
+        if hotkey_name and hotkey_name in self.hotkeys.values():
+            request = {
+                "apiName": "VTubeStudioPublicAPI",
+                "apiVersion": "1.0",
+                "messageType": "HotkeyTriggerRequest",
+                "data": {
+                    "hotkeyID": hotkey_name
                 }
+            }
+            try:
                 await self.ws.send(json.dumps(request))
                 res = await self.ws.recv()
-                print(f"Triggered hotkey {hotkey_id}: {hotkey_name}")
-            else:
-                print(f"Hotkey '{hotkey_name}' not found.")
+                print(res)
+                print(f"Triggered hotkey: {hotkey_name}")
+            except websockets.exceptions.ConnectionClosed:
+                print("WebSocket connection closed. Reconnecting...")
+                await self.reconnect()
+            except asyncio.TimeoutError:
+                print("WebSocket response timed out.")
+        else:
+            print(f"Hotkey '{hotkey_name}' not found.")
 
     async def send_heartbeat(self):
+        """Send periodic heartbeat messages to keep the connection alive."""
         while True:
-            await asyncio.sleep(30)  # Adjust interval if needed
+            await asyncio.sleep(10)  # Adjust interval if needed
             try:
                 await self.ws.ping()
             except Exception as e:
                 print(f"Heartbeat failed: {e}")
+                await self.reconnect()
                 break
 
+    async def reconnect(self):
+        """Reconnect to VTube Studio if the connection is lost."""
+        print("Attempting to reconnect...")
+        
+        if self.heartbeat_task:
+            self.heartbeat_task.cancel()
+            try:
+                await self.heartbeat_task  # 完全にキャンセルを待つ
+            except asyncio.CancelledError:
+                pass
+        
+        await self.close()  # 確実に閉じる
+
+        for _ in range(3):  # 最大3回リトライ
+            if await self.connect_auth():
+                print("Reconnection successful!")
+                return
+            print("Retrying connection...")
+            await asyncio.sleep(3)
+
+        print("Failed to reconnect after 3 attempts.")
+
+
     async def close(self):
+        """Close the WebSocket connection."""
+        if self.heartbeat_task:
+            self.heartbeat_task.cancel()
         if self.ws:
             await self.ws.close()
             print("Connection to VTube Studio closed.")
 
 async def main():
+    """Main function to run the VTSAdapter."""
     vts_adapter = VTSAdapter()
     if await vts_adapter.connect_auth():
         while True:
@@ -115,6 +152,5 @@ async def main():
     await vts_adapter.close()
 
 if __name__ == "__main__":
-    from dotenv import load_dotenv
     load_dotenv()
     asyncio.run(main())

@@ -13,8 +13,9 @@ class Narrator:
         self.vits2 = vits2
         self.voicevox = voicevox
         self.vts = vts
-        self.playsound = playsound
-        self.playsound2 = PlaySound(output_device_name=None) # Use default output for this
+        # self.playsound = playsound
+        self.playsound2 = PlaySound(output_device_name="Speakers") # Use default output for this
+        self.playsound1 = PlaySound(output_device_name="CABLE Input")
         self.obs = obs
     
     async def narrate(self, message: str, role: str='info'):
@@ -24,13 +25,15 @@ class Narrator:
         self.obs.set_answer(text_first)
         if role in ['info', 'user']:
             response_voice = self.voicevox.get_voice(text_first)
+            self.playsound2.play_sound(response_voice)
         else:
             response_voice = self.vits2.get_voice(text_first)
+            self.playsound1.play_sound(response_voice)
         if token and self.vts is not None:
             for _, expression in self.vts.hotkeys.items():
                 if expression == token:
                     await self.vts.trigger_hotkeys(expression)
-        self.playsound.play_sound(response_voice)
+        
         for text in text_list:
             self.obs.set_answer(text)
             if role in ['info', 'user']:
@@ -38,5 +41,5 @@ class Narrator:
                 self.playsound2.play_sound(response_voice)
             else:
                 response_voice = self.vits2.get_voice(text)
-                self.playsound.play_sound(response_voice)
+                self.playsound1.play_sound(response_voice)
         

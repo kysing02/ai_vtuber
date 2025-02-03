@@ -10,24 +10,31 @@ from scripts.adapters.vtube_studio_adapter import VTSAdapter
 from scripts.utils.helpers import split_japanese_text
 from scripts.sound.VoiceMaker import StyleBertVits2Adapter
 from scripts.file_manager import FileManager, FilePath
+from scripts.commands.action_manager import ActionManager, ActLeaveDiscordVoiceChat
+from scripts.commands.queries import Queries
+from scripts.memory.memory import ShortTermMemory
 import re
 import os
 class VoiceChat:
-    def __init__(self, adapter: OpenAIAdapter, vits2: StyleBertVits2Adapter, play_sound: PlaySound, vts: VTSAdapter | None = None):
+    def __init__(self, adapter: OpenAIAdapter, vits2: StyleBertVits2Adapter, play_sound: PlaySound, action_manager: ActionManager, memory: ShortTermMemory, queries: Queries, vts: VTSAdapter | None = None):
         self.adapter = adapter
         # self.voice_maker = voice_maker
         self.vits2 = vits2 # 高速化のためにモデルを先にロードする（voice_makerの代わりに）
         self.play_sound = play_sound
         self.process = None
         self.talk_history: list[dict[str, str]] = []
-        self.voice_chat_prompt = FileManager.read(FilePath.PROMPT_VOICE_CHAT)
         self.terminated = False  # Flag to track termination
         self.vts = vts
+        self.action_manager = action_manager
+        self.memory = memory
+        self.talk_history.extend(self.memory.get_short_term_memory(20))
+        self.queries = queries
+        self.voice_chat_prompt = self.queries.load_prompt_from_file(FilePath.PROMPT_VOICE_CHAT)
 
     def __run_asr(self):
         return subprocess.Popen(
-            # [sys.executable, 'scripts/sound/asr.py', '--use_api', 'True'],
-            [sys.executable, 'scripts/sound/asr.py'],
+            [sys.executable, 'scripts/sound/asr.py', '--use_api', 'True'],
+            # [sys.executable, 'scripts/sound/asr.py'],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
@@ -37,6 +44,7 @@ class VoiceChat:
         )
 
     async def __chat(self, transcription: str):
+        self.voice_chat_prompt = self.queries.load_prompt_from_file(FilePath.PROMPT_VOICE_CHAT)
         self.talk_history.append({"role": "user",
                                   "content": transcription})
         # 過去100やりとりまで参照する
@@ -74,8 +82,12 @@ class VoiceChat:
             await self.vts.connect_auth()
         self.process = self.__run_asr()
         print("ボイスチャットのセッションが開始した。")
-        signal.signal(signal.SIGINT, lambda signum, frame: asyncio.create_task(self.end()))
-        signal.signal(signal.SIGTERM, lambda signum, frame: asyncio.create_task(self.end()))
+
+        # Use asyncio's signal handling instead of the signal module
+        # loop = asyncio.get_event_loop()
+        # loop.add_signal_handler(signal.SIGINT, lambda: asyncio.create_task(self.end()))
+        # loop.add_signal_handler(signal.SIGTERM, lambda: asyncio.create_task(self.end()))
+
         # Debugging: Read stderr
         asyncio.create_task(self._log_stderr())
 
@@ -105,6 +117,11 @@ class VoiceChat:
                         else:
                             text = response
                         print("[アイリ]:", text)
+                        if "!LEAVE_DISCORD" in text:
+                            leave = ActLeaveDiscordVoiceChat(self.action_manager.vlife)
+                            await leave.execute()
+                            await leave.end()
+                            break
                         
         # except Exception as e:
         #     print("予期せぬエラーが発生した：", e)

@@ -31,8 +31,6 @@ class Action(ABC):
         if self.realtime:
             time_diff = datetime.now() - self.time_start
             # バーチャル世界の時間に整定するために、秒とマイクロ秒は省略
-            time_diff.seconds = 0
-            time_diff.microseconds = 0 
             self.vlife.world_time.proceed_time(timedelta)
             self.vlife.world_time.resume()
 
@@ -66,7 +64,7 @@ class ActWriteDiary(Action):
 
 class ActEnterDiscord(Action):
     name = "!ENTER_DISCORD"
-    description = "Discordに入る。"
+    description = "Discordに入る。複数の行動がある時このコマンドをCHATよりも一番優先すること。"
     async def execute(self):
         discord = self.vlife.discord
         await discord.set_online()
@@ -83,7 +81,7 @@ class ActLeaveDiscord(Action):
 class ActEnterDiscordVoiceChat(Action):
     name = "!ENTER_DISCORD_VOICE_CHAT"
     description = "Discordのボイスチャットに入る。先にDiscordに入る必要がある。"
-    realtime = True
+    # realtime = True
     async def execute(self):
         discord = self.vlife.discord
         future = discord.schedule_task(discord.messenger.join_voice_chat())
@@ -191,14 +189,14 @@ class ActSleepTillTomorrow(Action):
     
 class ActChatDeveloper(Action):
     name = "!CHAT_DEVELOPER"
-    description = "アイリの開発者、シンにチャットを送信する {!CHAT_DEVELOPER アイリがシンに話した内容そのままを送ってください}"
+    description = "アイリの開発者・シンにチャットを送信する。 {!CHAT_DEVELOPER **アイリが話した内容をそのまま送ること。**}  アイリがまだ話の内容が曖昧な場合は「{!CHECK_CHAT_DEVELOPER}」を使用する。" 
     async def execute(self, message):
         future = self.vlife.discord.schedule_task(self.vlife.discord.messenger.send_dm(message))
         await asyncio.wrap_future(future)
         
 class ActCheckDeveloperChat(Action):
     name = "!CHECK_CHAT_DEVELOPER"
-    description = "アイリの開発者、シンからもらったチャットメッセージを見る"
+    description = "[スマホを開く][シンに話しかける]などに使う。アイリの開発者、シンからもらったチャットメッセージを見る"
     async def execute(self):
         future = self.vlife.discord.schedule_task(self.vlife.discord.messenger.read_dm_str())
         messages = await asyncio.wrap_future(future)
@@ -253,14 +251,15 @@ class ActNew(Action):
             command_list = self.adapter.chat_completions([self.adapter.create_message('system', prompt),
                                         self.adapter.create_message('user', airi)])
             action_list = self.action_manager.parse(command_list)
+            
+            print("[SYSTEM]検出されたコマンド：", action_list)
             await self.action_manager.find_match_action(action_list)
 
-            await asyncio.sleep(1)
-            # 次のループに進
+            # 次のループに進む
             loop_trial += 1
         
-        await self.short_term_memory.add(f"アイリが楽しい時間を過ごした：")
-        await self.short_term_memory.add(info, narrate=False)
+        # await self.short_term_memory.add(f"アイリが楽しい時間を過ごした：")
+        # await self.short_term_memory.add(info, narrate=False)
 
         # コマンドを返す
         self.action_manager.predefined_actions.append(ActNew)

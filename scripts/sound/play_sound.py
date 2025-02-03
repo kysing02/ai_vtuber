@@ -9,14 +9,12 @@ class VoiceIO(TypedDict):
 
 class PlaySound:
     def __init__(self, output_device_name=None) -> None:
-        if output_device_name == None:
-            return
         # 指定された出力デバイス名に基づいてデバイスIDを取得
-        output_device_id = self._search_output_device_id(output_device_name)
+        self.output_device_id = self._search_output_device_id(output_device_name)
         # 入力デバイスIDは使用しないため、デフォルトの0を設定
         input_device_id = 0
         # デフォルトのデバイス設定を更新
-        sd.default.device = [input_device_id, output_device_id]
+        sd.default.device = [input_device_id, self.output_device_id]
     
     def _search_output_device_id(self, output_device_name, output_device_host_api=0) -> int:
         # 利用可能なデバイスの情報を取得
@@ -36,7 +34,10 @@ class PlaySound:
             exit()
         return output_device_id
     
-    def play_sound(self, voice_io: VoiceIO) -> bool:
+    def play_sound(self, voice_io: VoiceIO, use_self_id=True) -> bool:
+        if use_self_id:
+            sd.default.device = [0, self.output_device_id]
+            print("Using :" , self.output_device_id)
         # 音声データを再生
         sd.play(voice_io["data"], voice_io["sample_rate"])
 

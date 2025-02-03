@@ -71,8 +71,9 @@ class Messenger:
             if last_read_id is None or message.id > last_read_id:
                 self.contacts[author_name].last_read_message_id = message.id
             
-        self.memory.add(f"スマホに{self.unread_messages_count}件の通知が来ました：\n[{author_name}]からのメッセージです。[スマホを開く]ことでチェックできます。")
+        await self.memory.add(f"スマホに{self.unread_messages_count}件の通知が来ました：\n[{author_name}]からのメッセージです。[スマホを開く]ことでチェックできます。", narrate=False)
         self.action_manager.ask(f"[{author_name}]からの返信が来ました。どうしますか？")
+        return
 
     async def join_voice_chat(self):
         vc = await self.voice_channel.connect()

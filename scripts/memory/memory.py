@@ -105,10 +105,10 @@ class ShortTermMemory:
         if role == 'info':
             role = 'user'
             message = "[INFO]" + message
-        self.memory_list_gpt.append(self.adapter.create_message(role, message))
-        if len(self.memory_list) % 40 == 0 and len(self.memory_list) > 0:
-            loop = asyncio.get_running_loop()
-            loop.run_until_complete(asyncio.to_thread(self.long_term_memory.process_batch, self.memory_list[-40:]))
+        self.memory_list_gpt.append(self.adapter.create_message(role, f"[{self.worldtime.get_time_str_short()}] {message}"))
+        # if len(self.memory_list) % 40 == 0 and len(self.memory_list) > 0:
+        #     loop = asyncio.get_running_loop()
+        #     loop.run_until_complete(asyncio.to_thread(self.long_term_memory.process_batch, self.memory_list[-40:]))
 
     def get_short_term_memory(self, num: int):
         return self.memory_list_gpt[-num: ]
