@@ -229,15 +229,16 @@ class ActNew(Action):
                 history_simulator.append(end_hint)
             
             simulator = self.adapter.chat_completions(history_simulator)
-            await self.short_term_memory.add(simulator, role="user")
             action_list = self.action_manager.parse(simulator)
             for action, desc in action_list:
                 if action == "!END":
                     should_end = True
+                    print("[DEBUG]!ENDが検出された。")
                     break
             if should_end:
                 break
-            
+            else:
+                await self.short_term_memory.add(simulator, role="user")
             await asyncio.sleep(1)
 
             # アイリの番

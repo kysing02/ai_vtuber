@@ -72,7 +72,8 @@ class Messenger:
                 self.contacts[author_name].last_read_message_id = message.id
             
         await self.memory.add(f"スマホに{self.unread_messages_count}件の通知が来ました：\n[{author_name}]からのメッセージです。[スマホを開く]ことでチェックできます。", narrate=False)
-        self.action_manager.ask(f"[{author_name}]からの返信が来ました。どうしますか？")
+        query = self.action_manager.ask(f"[{author_name}]からの返信が来ました。どうしますか？")
+        await self.memory.add(query, role='assistant')
         return
 
     async def join_voice_chat(self):
@@ -114,14 +115,14 @@ class Messenger:
 
             # Process the messages
             for message in messages_list:
-                if (message.id > contact.last_read_message_id or contact.last_read_message_id is None) and not is_unread_start:
+                if ((message.id > contact.last_read_message_id or contact.last_read_message_id is None)) and not is_unread_start:
                     is_unread_start = True
                     messages += "(\n--------------ここからは未読のメッセージ--------------)"
                 if is_unread_start:
                     self.unread_messages_count -= 1
                 if self.unread_messages_count == 0:
-                    messages += "\n以上のメッセージを全部既読した"
-                messages += f"\n[現実世界の時間{message.created_at}][{message.author}]{message.content}"
+                    messages += "\n--------------ここまで読んだ--------------"
+                messages += f"\n[現実世界の時間{message.created_at}][{message.author.global_name}]{message.content}"
         except Exception as e:
             print(f"Error while fetching messages: {e}")
 

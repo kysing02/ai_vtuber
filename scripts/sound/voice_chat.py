@@ -116,12 +116,15 @@ class VoiceChat:
                             self.play_sound.play_sound(response_voice)
                         else:
                             text = response
-                        print("[アイリ]:", text)
                         if "!LEAVE_DISCORD" in text:
+                            text = str(text).replace("!LEAVE_DISCORD", "").replace(" ", "")
                             leave = ActLeaveDiscordVoiceChat(self.action_manager.vlife)
+                            if text != "":
+                                print("[アイリ]:", text)
                             await leave.execute()
                             await leave.end()
                             break
+                        print("[アイリ]:", text)
                         
         # except Exception as e:
         #     print("予期せぬエラーが発生した：", e)
