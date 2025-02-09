@@ -6,6 +6,7 @@ import wave
 import discord
 import asyncio
 import threading
+import logging
 from discord.ext import commands
 from discord.message import Message
 from discord.member import Member
@@ -42,7 +43,6 @@ class DiscordBot:
         # Register events
         self.client.event(self.on_ready)
         self.client.event(self.on_message)
-        # self.client.event(self.on_member_join)
         
         self.task_future = None
 
@@ -51,16 +51,12 @@ class DiscordBot:
         # Initialize messenger class
         self.messenger = Messenger(self.voice_chat, self.adapter, self.short_term_memory, self.action_manager)
 
-        print("Loading ")
-        print(f'{self.client.user} has connected to Discord!')
+        logging.info(f'{self.client.user} has connected to Discord!')
         self.messenger.user = self.client.user
         self.messenger.guild = discord.utils.get(self.client.guilds, id=int(self.messenger.guild_id))
-        print(f'{self.client.user} is connected to the guild: {self.messenger.guild.name} (id: {self.messenger.guild_id})')
+        logging.info(f'{self.client.user} is connected to the guild: {self.messenger.guild.name} (id: {self.messenger.guild_id})')
         self.messenger.voice_channel = discord.utils.get(self.messenger.guild.voice_channels, name=self.messenger.voice_channel_name)
         
-        # Check guild members
-        members = '\n - '.join([member.name for member in self.messenger.guild.members])
-        print(f'Guild Members:\n - {members}')
         await self.messenger.add_guild_members()
 
     async def on_message(self, message: Message):
@@ -70,8 +66,6 @@ class DiscordBot:
 
         # System level commands (only allow for dev user)
 
-        print(message.author.dm_channel.id)
-        print(self.messenger.dev_dm_id)
         if message.author.dm_channel.id == self.messenger.dev_dm_id:
             if message.content == "!voice_join":
                 await self.messenger.join_voice_chat()
@@ -105,20 +99,19 @@ class DiscordBot:
     async def send_dm(self, message, name=None):
         if name is None:
             if self.messenger.dev_dm_channel is None:
-                print("ERROR: dev_dm_channel is not set!")
+                logging.error("dev_dm_channel is not set!")
                 return
-            print(f"DEBUG: {self.messenger.dev_dm_channel}")
             await self.messenger.dev_dm_channel.send(message)
         if self.task_future:  # If future exists, mark it as done
             self.task_future.set_result("Task completed successfully!")
 
     async def set_invisible(self):
         await self.client.change_presence(status=discord.Status.invisible)
-        print(f"{self.client.user} is now invisible.")
+        logging.info(f"{self.client.user} is now invisible.")
 
     async def set_online(self):
         await self.client.change_presence(status=discord.Status.online)
-        print(f'{self.client.user} is now online.')
+        logging.info(f'{self.client.user} is now online.')
 
     # async def on_member_join(self, member: Member):
     #     await member.create_dm()

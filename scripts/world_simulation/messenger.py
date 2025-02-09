@@ -8,6 +8,7 @@ from scripts.memory.memory import ShortTermMemory
 from scripts.commands.action_manager import ActionManager
 from dotenv import load_dotenv
 import os
+import logging
 
 class Contact:
     def __init__(self, name: str, channel: DMChannel):
@@ -53,10 +54,9 @@ class Messenger:
             if member.dm_channel.id == self.dev_dm_id:
                 self.dev_dm_channel = member.dm_channel
             new_contact = Contact(name=member.global_name, channel=member.dm_channel)
-            print(new_contact.name)
             self.contacts[member.global_name] = new_contact
             print(self.contacts[member.global_name].name)
-        print("Added all guild members to own contact.")
+        logging.info("Added all guild members to own contact.")
 
     async def receive_dm(self, message: Message):
         self.unread_messages_count += 1
@@ -68,11 +68,12 @@ class Messenger:
         else:
             # Check for last read message
             last_read_id = contact.last_read_message_id
-            if last_read_id is None or message.id > last_read_id:
+            if last_read_id is None:
                 self.contacts[author_name].last_read_message_id = message.id
+                
             
         await self.memory.add(f"スマホに{self.unread_messages_count}件の通知が来ました：\n[{author_name}]からのメッセージです。[スマホを開く]ことでチェックできます。", narrate=False)
-        query = self.action_manager.ask(f"[{author_name}]からの返信が来ました。どうしますか？")
+        query = self.action_manager.ask(f"[{author_name}]からの返信が来ました。どうしますか？(10文字程度)")
         await self.memory.add(query, role='assistant')
         return
 
@@ -89,9 +90,9 @@ class Messenger:
 
             # Disconnect the bot from the voice channel
             await self.guild.voice_client.disconnect()
-            print(f"Left the voice channel.")
+            logging.info(f"Left the voice channel.")
         else:
-            print(f"I'm not in voice channel!")
+            logging.warning(f"I'm not in voice channel!")
 
     # TODO Now only work for dev direct message
     async def read_dm_str(self, global_name="シン", limit=5):
@@ -115,16 +116,17 @@ class Messenger:
 
             # Process the messages
             for message in messages_list:
-                if ((message.id > contact.last_read_message_id or contact.last_read_message_id is None)) and not is_unread_start:
+                if ((contact.last_read_message_id is None or message.id > contact.last_read_message_id)) and is_unread_start == False:
                     is_unread_start = True
                     messages += "(\n--------------ここからは未読のメッセージ--------------)"
                 if is_unread_start:
                     self.unread_messages_count -= 1
-                if self.unread_messages_count == 0:
-                    messages += "\n--------------ここまで読んだ--------------"
                 messages += f"\n[現実世界の時間{message.created_at}][{message.author.global_name}]{message.content}"
+            if self.unread_messages_count <= 0:
+                self.unread_messages_count = 0
+            contact.last_read_message_id = messages_list[-1].id
         except Exception as e:
-            print(f"Error while fetching messages: {e}")
+            logging.error(f"Error while fetching messages: {e}")
 
         return messages
 
@@ -133,7 +135,6 @@ class Messenger:
     async def send_dm(self, message, name=None):
         if name is None:
             if self.dev_dm_channel is None:
-                print("ERROR: dev_dm_channel is not set!")
+                logging.error("dev_dm_channel is not set!")
                 return
-            print(f"DEBUG: {self.dev_dm_channel}")
             await self.dev_dm_channel.send(message)

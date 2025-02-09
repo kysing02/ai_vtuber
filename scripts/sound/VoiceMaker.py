@@ -98,7 +98,6 @@ class FishAudioAdapter:
     def __create_tts(self, query_data) -> bytes:
         headers = {"accept": "audio/wav", "Content-Type":"application/json"}
         res = requests.post(self.URL+'v1/tts', json=query_data, headers=headers)
-        print(res.status_code)
         return res.content
     def get_voice(self, text: str) -> VoiceIO:
         query_data = {

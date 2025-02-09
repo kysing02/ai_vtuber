@@ -258,6 +258,9 @@ class ActNew(Action):
 
             # 次のループに進む
             loop_trial += 1
+
+            # TODO: ここで一旦強制修了させる
+            should_end = True
         
         # await self.short_term_memory.add(f"アイリが楽しい時間を過ごした：")
         # await self.short_term_memory.add(info, narrate=False)

@@ -37,7 +37,6 @@ class PlaySound:
     def play_sound(self, voice_io: VoiceIO, use_self_id=True) -> bool:
         if use_self_id:
             sd.default.device = [0, self.output_device_id]
-            print("Using :" , self.output_device_id)
         # 音声データを再生
         sd.play(voice_io["data"], voice_io["sample_rate"])
 

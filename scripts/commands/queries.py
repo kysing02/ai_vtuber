@@ -13,7 +13,9 @@ class Queries:
         "SHORT_TERM_MEMORY",
         "MEMO_APP",
         "DATETIME",
-        "THOUGHTS"
+        "THOUGHTS",
+        "AVAILABLE_ACTIONS",
+        "DAILY_PLANS"
     ]
 
     def __init__(self, vlife: "VLife"):

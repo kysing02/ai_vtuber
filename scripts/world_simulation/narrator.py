@@ -2,7 +2,6 @@ from scripts.sound.play_sound import PlaySound
 from scripts.adapters.vtube_studio_adapter import VTSAdapter
 from scripts.utils.helpers import split_japanese_text
 from scripts.sound.VoiceMaker import StyleBertVits2Adapter, VoicevoxAdapter
-from scripts.file_manager import FileManager, FilePath
 from scripts.adapters.obs_adapter import OBSAdapter
 from scripts.utils.parser import Parser
 from scripts.utils.helpers import split_japanese_text
@@ -17,7 +16,7 @@ class Narrator:
         # self.playsound2 = PlaySound(output_device_name="Speakers") # Use default output for this
         # self.playsound1 = PlaySound(output_device_name="CABLE Input")
 
-        self.playsound2 = PlaySound() # Use default output for this
+        self.playsound2 = PlaySound()
         self.playsound1 = PlaySound()
 
         self.obs = obs

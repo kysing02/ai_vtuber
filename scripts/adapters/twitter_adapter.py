@@ -1,6 +1,7 @@
 import os
 import tweepy
 import tweepy.errors
+import logging
 
 class TwitterAdapter:
     # このファイルのディレクトリパス
@@ -22,9 +23,9 @@ class TwitterAdapter:
     def post_tweet(self, content: str):
         try:
             self.client.create_tweet(text=content)
-            print("ポストの投稿に成功しました：", content)
+            logging.info("ポストの投稿に成功しました：", content)
         except tweepy.errors.TweepyException as e:
-            print(f"エラーが発生しました：{e}")
+            logging.error(f"エラーが発生しました：{e}")
     
 if __name__ == "__main__":
     twitter = TwitterAdapter()

@@ -3,6 +3,7 @@ from scripts.world_simulation.world_time import WorldTime
 from scripts.commands.queries import Queries
 from datetime import datetime
 from scripts.file_manager import FileManager, FilePath
+import logging
 
 class DailyPlanner:
     def __init__(self, adapter: OpenAIAdapter, queries: Queries):
@@ -13,7 +14,7 @@ class DailyPlanner:
         datestr = datetime.strftime("%Y%m%d")
         daily_plan_file_path = FilePath.TEXT_DAILY_PLAN.format(datestr=datestr)
         if FileManager.exist(daily_plan_file_path):
-            print("一日の予定表が既に存在しているため再生成しない。")
+            logging.info("一日の予定表が既に存在しているため再生成しない。")
             return
         prompt = self.queries.load_prompt_from_file(FilePath.PROMPT_DAILY_PLANNER)
         message = [self.adapter.create_message('system', prompt),

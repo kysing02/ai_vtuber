@@ -5,6 +5,7 @@ from scripts.adapters.openai_adapter import OpenAIAdapter
 from scripts.file_manager import FileManager, FilePath
 import numpy as np
 from scripts.world_simulation.narrator import Narrator
+
 class MemoryRecord:
     def __init__(self, memory_time: datetime, role: str, message: str, adapter: OpenAIAdapter, skip_embedding=False):
         self.memory_time = memory_time
@@ -75,7 +76,7 @@ class LongTermMemory:
         FileManager.write_json(FilePath.JSON_LONG_TERM_MEMORY, self.memory_list)
 
 class ShortTermMemory:
-    LTM_UPDATE_FREQUENCY = 1000   # 何件の新しいことが起きたときに、短期記憶を長期記憶に保存するか
+    LTM_UPDATE_FREQUENCY = 1   # 何件の新しいことが起きたときに、短期記憶を長期記憶に保存するか
     
     def __init__(self, worldtime: WorldTime, long_term_memory: LongTermMemory, adapter: OpenAIAdapter, narrator: Narrator):
         self.memory_list: list[MemoryRecord] = []

@@ -4,6 +4,7 @@ from scripts.adapters.openai_adapter import OpenAIAdapter
 from datetime import datetime
 import scripts.utils.helpers as utils
 from file_manager import FileManager, FilePath
+import logging
 
 class TimeTable(BaseModel):
     monday: list[str]
@@ -33,7 +34,7 @@ class School:
         events_file_path = FilePath.JSON_SCHOOL_EVENTS.format(year=year)
         timetable_file_path = FilePath.JSON_TIMETABLE.format(year=year)
         if FileManager.exist(events_file_path) and FileManager.exist(timetable_file_path):
-            print("年間スケジュールと時間割が既に存在しているため再生成しない。")
+            logging.info("年間スケジュールと時間割が既に存在しているため再生成しない。")
             return
 
         # プロンプトチェイン１：高校の行事を生成
@@ -87,7 +88,7 @@ class School:
         year_schedule = self.adapter.create_structured_output(messages, SchoolEvents)
         FileManager.write_json(events_file_path, year_schedule)
 
-        print(f"{year}年のスケジュールが生成された")
+        logging.info(f"{year}年のスケジュールが生成された")
 
         # 学校の時間割を生成
         system_message = """
@@ -103,7 +104,7 @@ class School:
         timetable = self.adapter.create_structured_output(messages, TimeTable)
         FileManager.write_json(timetable_file_path, timetable)
 
-        print(f"{year}年の学校の時間割が生成された")
+        logging.info(f"{year}年の学校の時間割が生成された")
     
     def get_timetable_str(self, year: int=None, weekday: int=None) -> str:
         if not year or not weekday:

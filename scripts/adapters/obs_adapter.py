@@ -1,7 +1,7 @@
 import obsws_python as obs
 import os
 from dotenv import load_dotenv
-
+import logging
 
 class OBSAdapter:
     def __init__(self) -> None:
@@ -24,7 +24,7 @@ class OBSAdapter:
 
     def set_scene(self, scene_name: str="Storytelling-Scene"):
         self.ws.set_current_scene_collection(scene_name)
-        print(f"Scene changed to {scene_name}")
+        logging.info(f"Scene changed to {scene_name}")
 
     def start_streaming(self):
         self.ws.set_stream_service_settings()

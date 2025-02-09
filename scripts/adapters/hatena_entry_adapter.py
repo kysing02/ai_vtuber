@@ -3,6 +3,7 @@ from requests.auth import HTTPBasicAuth
 import dotenv
 import os
 from xml.etree.ElementTree import Element, SubElement, tostring
+import logging
 
 dotenv.load_dotenv()
 
@@ -22,10 +23,10 @@ class HatenaEntryAdapter:
                          auth=HTTPBasicAuth(username=self.hatena_id, password=self.key),
                          headers={'Content-Type':'application/xml'}, data=xml_data)
         if response.status_code == 201:
-            print(f'Success to post: {response.status_code}')
+            logging.info(f'Success to post: {response.status_code}')
             return True
         else:
-            print(f'Failed to post: {response.status_code}')
+            logging.info(f'Failed to post: {response.status_code}')
             print(response.text)
 
     def __to_xml(self, title: str, content: str):

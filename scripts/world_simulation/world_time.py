@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from datetime import datetime, timedelta
 from typing import Callable, List
 from scripts.adapters.openai_adapter import OpenAIAdapter
+import logging
 
 class WorldTime:
     def __init__(self,
@@ -18,7 +19,7 @@ class WorldTime:
         self._pause_event = threading.Event()
         self._pause_event.set()  # Initially, not paused
         self._stop_event = threading.Event()  # To stop the thread
-        print(f"ワールドの時間が{start_time}に設定した")
+        logging.info(f"ワールドの時間が{start_time}に設定した")
         self.__start_time_thread()
     
     def __start_time_thread(self):
@@ -49,7 +50,7 @@ class WorldTime:
             steps -= timedelta(minutes=1)
             self.current_time += timedelta(minutes=1)
             self.__check_timer()
-        print(f"現在時間：{self.get_time_str()}")
+        # print(f"現在時間：{self.get_time_str()}")
 
     def add_timer(self, datetime: datetime, callback: Callable):
         newCallbackSchedule = CallbackSchedule(datetime=datetime, callback=callback)

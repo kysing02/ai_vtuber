@@ -12,8 +12,6 @@ class Parser:
 
     @staticmethod
     def parse_expression(input_text):
-        print("RAW TEXT:", input_text)
-
         # Step 1: Remove text inside square brackets
         text = Parser.remove_brackets(input_text).strip()
 
@@ -26,8 +24,6 @@ class Parser:
         # Step 3: Remove all emojis
         text = Parser.remove_emojis(text).strip()
 
-        print("TOKEN:", token if token else "None")
-        print("Processed TEXT:", text if text else "No additional text")
         return token, text
 
 # Test cases
