@@ -67,7 +67,7 @@ class VLife:
         self.school.make_year_schedule(year=self.world_time.current_time.year)
         # 一日の計画を立てる。一日の計画の更新は自動的ではなく、コマンド：起きるところから始める
         self.daily_planner.make_daily_plan(datetime=self.world_time.current_time)
-        await self.short_term_memory.add("アイリが今日の予定を立てた。")
+        await self.short_term_memory.add("(アイリが今日の予定を立てた。)")
         # システムを開始
         while True:
             await self.action_manager.take_action()

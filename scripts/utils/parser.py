@@ -4,7 +4,9 @@ import emoji
 class Parser:
     @staticmethod
     def remove_brackets(text):
-        return re.sub(r"\[.*?\]", "", text)
+        processed_str = re.sub(r"\[.*?\]", "", text)
+        processed_str.replace("「", "").replace("」", "")
+        return processed_str
 
     @staticmethod
     def remove_emojis(text):

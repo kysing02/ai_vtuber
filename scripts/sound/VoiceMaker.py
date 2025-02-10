@@ -53,7 +53,7 @@ class VoicevoxAdapter:
         }
         headers = {"accept": "audio/wav", "Content-Type":"application/json"}
         res = requests.post(self.URL+'synthesis', params=a_params, data=json.dumps(query_data), headers=headers)
-        print(res.status_code)
+        # print(res.status_code)
         return res.content
     def get_voice(self, text: str) -> VoiceIO:
         speaker_id = 59 # 「猫使ビィ」のspeaker_id

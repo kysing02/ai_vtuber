@@ -17,7 +17,7 @@ def split_japanese_text(text: str):
     # Combine text and its separator while skipping "、"
     result = []
     for i in range(0, len(segments), 2):
-        base_text = segments[i].replace("、", "")  # Remove "、"
+        base_text = segments[i].replace("、", "").replace("(","").replace(")", "")  # Remove "、"
         if i + 1 < len(segments):
             base_text += segments[i + 1]  # Append the separator(s)
         if base_text.strip():  # Ignore empty results

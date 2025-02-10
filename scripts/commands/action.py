@@ -223,7 +223,7 @@ class ActNew(Action):
             history_simulator = self.change_role(history)
             history_simulator.insert(0, self.adapter.create_message('system', prompt_sim))
 
-            # 10回の会話ループごとに、{!END}を提唱する
+            # 10回の会話ループごとに、{!END}を促す
             if loop_trial % 10 == 0:
                 end_hint = self.adapter.create_message("assistant", "もう凄い時間立っているのにまだ{!end}していないの？忘れた？")
                 history_simulator.append(end_hint)
@@ -269,7 +269,7 @@ class ActNew(Action):
         self.action_manager.predefined_actions.append(ActNew)
         self.action_manager.predefined_actions.append(ActSleepTillTomorrow)
         # self.action_manager.PREDEFINED_ACTIONS.append(ActStreaming)
-        await asyncio.sleep(5) # クールタイムを入れて休憩
+        # await asyncio.sleep(1) # クールタイムを入れて休憩
 
     def change_role(self, messages: list):
         for message in messages:

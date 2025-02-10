@@ -55,7 +55,6 @@ class Messenger:
                 self.dev_dm_channel = member.dm_channel
             new_contact = Contact(name=member.global_name, channel=member.dm_channel)
             self.contacts[member.global_name] = new_contact
-            print(self.contacts[member.global_name].name)
         logging.info("Added all guild members to own contact.")
 
     async def receive_dm(self, message: Message):
@@ -73,8 +72,8 @@ class Messenger:
                 
             
         await self.memory.add(f"スマホに{self.unread_messages_count}件の通知が来ました：\n[{author_name}]からのメッセージです。[スマホを開く]ことでチェックできます。", narrate=False)
-        query = self.action_manager.ask(f"[{author_name}]からの返信が来ました。どうしますか？(10文字程度)")
-        await self.memory.add(query, role='assistant')
+        # query = self.action_manager.ask(f"[{author_name}]からの返信が来ました。どうしますか？(10文字程度)")
+        # await self.memory.add(query, role='assistant', narrate=False)
         return
 
     async def join_voice_chat(self):
