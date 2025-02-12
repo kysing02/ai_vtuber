@@ -71,7 +71,7 @@ class VLife:
         # システムを開始
         while True:
             await self.action_manager.take_action()
-            await asyncio.sleep(1)  # Add a small delay to avoid busy-waiting
+            await asyncio.sleep(0.1)  # Add a small delay to avoid busy-waiting
 
     @staticmethod
     def get_profile():

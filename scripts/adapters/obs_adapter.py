@@ -15,6 +15,7 @@ class OBSAdapter:
         self.ws = obs.ReqClient(host=host,
                                 port=port,
                                 password=password)
+        self.set_answer("")
 
     def set_question(self, text: str):
         self.ws.set_input_settings(name="Question", settings={"text": text}, overlay=True)

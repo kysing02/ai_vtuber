@@ -88,8 +88,6 @@ class ActEnterDiscordVoiceChat(Action):
         future = discord.schedule_task(discord.messenger.join_voice_chat())
         await asyncio.wrap_future(future)
         act_leave = ActLeaveDiscordVoiceChat(self.vlife)
-        await act_leave.execute()
-        await act_leave.end()
 
 class ActLeaveDiscordVoiceChat(Action):
     name = "!LEAVE_DISCORD_VOICE_CHAT"
@@ -242,7 +240,7 @@ class ActNew(Action):
                 break
             else:
                 await self.short_term_memory.add(simulator, role="user")
-            await asyncio.sleep(1)
+            # await asyncio.sleep(1)
 
             # アイリの番
             new_history = self.short_term_memory.get_short_term_memory(50)

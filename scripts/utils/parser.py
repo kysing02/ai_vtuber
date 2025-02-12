@@ -5,7 +5,7 @@ class Parser:
     @staticmethod
     def remove_brackets(text):
         processed_str = re.sub(r"\[.*?\]", "", text)
-        processed_str.replace("「", "").replace("」", "")
+        processed_str = processed_str.replace("「", "").replace("」", "")
         return processed_str
 
     @staticmethod

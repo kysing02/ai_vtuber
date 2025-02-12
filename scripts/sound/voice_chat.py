@@ -98,7 +98,16 @@ class VoiceChat:
                     elif response is not None:
                         token, text_raw = self.parse_expression(response)
                         text_list = split_japanese_text(text_raw)
-                        response_voice = self.vits2.get_voice(text_list.pop(0))
+                        single_text = text_list.pop(0)
+                        if "!LEAVE_DISCORD" in single_text:
+                            text = str(single_text).replace("!LEAVE_DISCORD", "").replace(" ", "")
+                            leave = ActLeaveDiscordVoiceChat(self.action_manager.vlife)
+                            if text != "":
+                                await self.memory.add(text, role='assistant', narrate=False)
+                            await leave.execute()
+                            await leave.end()
+                            break
+                        response_voice = self.vits2.get_voice(single_text)
                         # response_voice = self.voice_maker.make_voice_fish_audio(text_list.pop(0))
                         if token and self.vts is not None:
                             for _, expression in self.vts.hotkeys.items():
@@ -106,18 +115,18 @@ class VoiceChat:
                                     await self.vts.trigger_hotkeys(expression)
                         self.play_sound.play_sound(response_voice)
                         for text in text_list:
+                            if "!LEAVE_DISCORD" in text:
+                                text = str(text).replace("!LEAVE_DISCORD", "").replace(" ", "")
+                                leave = ActLeaveDiscordVoiceChat(self.action_manager.vlife)
+                                if text != "":
+                                    await self.memory.add(text, role='assistant', narrate=False)
+                                await leave.execute()
+                                await leave.end()
+                                break
                             response_voice = self.vits2.get_voice(text)
                             self.play_sound.play_sound(response_voice)
                         else:
                             text = response
-                        if "!LEAVE_DISCORD" in text:
-                            text = str(text).replace("!LEAVE_DISCORD", "").replace(" ", "")
-                            leave = ActLeaveDiscordVoiceChat(self.action_manager.vlife)
-                            if text != "":
-                                await self.memory.add(text, role='assistant', narrate=False)
-                            await leave.execute()
-                            await leave.end()
-                            break
                         await self.memory.add(text, role='assistant', narrate=False)
                         
         # except Exception as e:
