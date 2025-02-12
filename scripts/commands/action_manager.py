@@ -83,7 +83,7 @@ class ActionManager:
                                        self.adapter.create_message('user', decision)])
 
         # 対応するコマンドに応じて行動を取る
-        # print("[SYSTEM]出力されたコマンド：", command_list)
+        print("[SYSTEM]出力されたコマンド：", command_list)
 
         action_list = self.parse(command_list)
 

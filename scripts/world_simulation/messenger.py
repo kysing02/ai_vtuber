@@ -67,9 +67,6 @@ class Messenger:
         else:
             # Check for last read message
             last_read_id = contact.last_read_message_id
-            if last_read_id is None:
-                self.contacts[author_name].last_read_message_id = message.id
-                
             
         await self.memory.add(f"スマホに{self.unread_messages_count}件の通知が来ました：\n[{author_name}]からのメッセージです。[スマホを開く]ことでチェックできます。", narrate=False)
         # query = self.action_manager.ask(f"[{author_name}]からの返信が来ました。どうしますか？(10文字程度)")
@@ -116,11 +113,13 @@ class Messenger:
             # Process the messages
             for message in messages_list:
                 if ((contact.last_read_message_id is None or message.id > contact.last_read_message_id)) and is_unread_start == False:
+                    if (message.author == self.user):
+                        continue
                     is_unread_start = True
                     messages += "(\n--------------ここからは未読のメッセージ--------------)"
                 if is_unread_start:
                     self.unread_messages_count -= 1
-                messages += f"\n[現実世界の時間{message.created_at}][{message.author.global_name}]{message.content}"
+                messages += f"\n[現実世界の時間{message.created_at}][{message.author.display_name}]{message.content}"
             if self.unread_messages_count <= 0:
                 self.unread_messages_count = 0
             contact.last_read_message_id = messages_list[-1].id

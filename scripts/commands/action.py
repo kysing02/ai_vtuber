@@ -80,13 +80,16 @@ class ActLeaveDiscord(Action):
 
 class ActEnterDiscordVoiceChat(Action):
     name = "!ENTER_DISCORD_VOICE_CHAT"
-    description = "Discordのボイスチャットに入る。先にDiscordに入る必要がある。"
+    description = "Discordのボイスチャットに入る。!CHAT_DEVELOPERよりも優先してこのActionを実行してください"
     # realtime = True
     async def execute(self):
         discord = self.vlife.discord
+        await self.short_term_memory.add("アイリがDiscordのボイスチャットに入った。")
         future = discord.schedule_task(discord.messenger.join_voice_chat())
         await asyncio.wrap_future(future)
-        await self.short_term_memory.add("アイリがDiscordのボイスチャットに入った。")
+        act_leave = ActLeaveDiscordVoiceChat(self.vlife)
+        await act_leave.execute()
+        await act_leave.end()
 
 class ActLeaveDiscordVoiceChat(Action):
     name = "!LEAVE_DISCORD_VOICE_CHAT"
@@ -189,7 +192,7 @@ class ActSleepTillTomorrow(Action):
     
 class ActChatDeveloper(Action):
     name = "!CHAT_DEVELOPER"
-    description = "アイリの開発者・シンにチャットを送信する。 {!CHAT_DEVELOPER **アイリが話した内容をそのまま送ること。**}  アイリがまだ話の内容が曖昧な場合は「{!CHECK_CHAT_DEVELOPER}」を使用する。" 
+    description = "アイリの開発者・シンにチャットを送信する。 {!CHAT_DEVELOPER **アイリが話した内容をそのまま送ること。**}  アイリがまだ話の内容が曖昧な場合は「{!CHECK_CHAT_DEVELOPER}」を使用する。なお，ボイスチャットについて言及するときは{!ENTER_DISCORD_VOICE_CHAT}を優先してください" 
     async def execute(self, message):
         future = self.vlife.discord.schedule_task(self.vlife.discord.messenger.send_dm(message))
         await asyncio.wrap_future(future)

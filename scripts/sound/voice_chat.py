@@ -7,6 +7,7 @@ from scripts.adapters.openai_adapter import OpenAIAdapter
 from scripts.adapters.vtube_studio_adapter import VTSAdapter
 from scripts.adapters.obs_adapter import OBSAdapter
 from scripts.utils.helpers import split_japanese_text
+from scripts.utils.parser import Parser
 from scripts.sound.VoiceMaker import StyleBertVits2Adapter
 from scripts.file_manager import FileManager, FilePath
 from scripts.commands.action_manager import ActionManager, ActLeaveDiscordVoiceChat
@@ -47,14 +48,14 @@ class VoiceChat:
         )
 
     async def __chat(self, transcription: str):
-        self.memory.add(transcription, 'user')
+        await self.memory.add(transcription, 'user', narrate=False)
         # Reload prompt to get latest info
         self.voice_chat_prompt = self.queries.load_prompt_from_file(FilePath.PROMPT_VOICE_CHAT)
         talk_history = self.memory.get_short_term_memory(20)
         message = [self.adapter.create_message("system", self.voice_chat_prompt),
                    *talk_history]
         response = self.adapter.chat_completions(message)
-        self.memory.add(response, role='assistant')
+        await self.memory.add(response, role='assistant', narrate=False)
         return response
 
     async def end(self):
@@ -87,13 +88,13 @@ class VoiceChat:
         try:
             async for output in self.__read_stdout():
                 if 'ready' in output:
-                    logging.info("[ASRが準備完了した]")
+                    print("[ASRが準備完了した]")
                 elif output:
                     output = f"[{self.nickname}]{output}" 
                     # 音声合成して会話をする
                     response = await self.__chat(output)
                     if 'none' in response:
-                        self.memory.add(f"(アイリが{self.nickname}を無視した)", role='assistant')
+                        await self.memory.add(f"(アイリが{self.nickname}を無視した)", role='assistant', narrate=False)
                     elif response is not None:
                         token, text_raw = self.parse_expression(response)
                         text_list = split_japanese_text(text_raw)
@@ -113,11 +114,11 @@ class VoiceChat:
                             text = str(text).replace("!LEAVE_DISCORD", "").replace(" ", "")
                             leave = ActLeaveDiscordVoiceChat(self.action_manager.vlife)
                             if text != "":
-                                self.memory.add(text, role='assistant')
+                                await self.memory.add(text, role='assistant', narrate=False)
                             await leave.execute()
                             await leave.end()
                             break
-                        self.memory.add(text, role='assistant')
+                        await self.memory.add(text, role='assistant', narrate=False)
                         
         # except Exception as e:
         #     print("予期せぬエラーが発生した：", e)
@@ -136,6 +137,7 @@ class VoiceChat:
                     break
     
     def parse_expression(self, input_text):
+        input_text = Parser.remove_brackets(input_text)
         # Match the first occurrence of {token} anywhere in the text
         match = re.search(r"\{(\w+)\}", input_text)
         if match:

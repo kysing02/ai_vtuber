@@ -87,7 +87,7 @@ class VTSAdapter:
                 }
             }
             try:
-                await self.ws.send(json.dumps(request))
+                self.ws.send(json.dumps(request))
                 async with self.recv_lock:  # Use the lock to ensure exclusive access to recv()
                     res = await self.ws.recv()
                 logging.info(f"Triggered hotkey: {hotkey_name}")
