@@ -13,7 +13,7 @@ class Narrator:
         self.voicevox = voicevox
         self.vts = vts
         # self.playsound = playsound
-        self.playsound2 = PlaySound(output_device_name="Headphones") # Use default output for this
+        self.playsound2 = PlaySound(output_device_name="スピーカー") # Use default output for this
         self.playsound1 = PlaySound(output_device_name="CABLE Input")
 
         # self.playsound2 = PlaySound()
