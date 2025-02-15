@@ -6,7 +6,6 @@ from scripts.sound.voice_chat import VoiceChat
 from scripts.adapters.openai_adapter import OpenAIAdapter
 from scripts.memory.memory import ShortTermMemory
 from scripts.commands.action_manager import ActionManager
-from dotenv import load_dotenv
 import os
 import logging
 

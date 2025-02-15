@@ -37,7 +37,8 @@ class VLife:
         self.obs = OBSAdapter()
         self.vits2 = StyleBertVits2Adapter()
         self.voicevox = VoicevoxAdapter()
-        self.play_sound = PlaySound("CABLE Input")
+        self.play_sound_narrator = PlaySound(output_device_name="Headphones")
+        self.play_sound_airi = PlaySound(output_device_name="CABLE Input")
         self.vts = VTSAdapter()
         self.long_term_memory = LongTermMemory(self.openai_adapter)
         self.narrator = Narrator(self.vits2, self.voicevox, self.vts, self.play_sound, self.obs)
@@ -54,7 +55,7 @@ class VLife:
         self.voice_chat = VoiceChat(
             adapter=self.openai_adapter,
             vits2=self.vits2,
-            play_sound=self.play_sound,
+            play_sound=self.play_sound_airi,
             action_manager=self.action_manager,
             memory=self.short_term_memory,
             queries=self.queries,
@@ -79,7 +80,7 @@ class VLife:
         proceed_time_thread = threading.Thread(target=self.world_time.proceed_time_in_background, daemon=True).start()
 
         # 年間スケジュールを作成する。(4月1日になったら自動的に新しいスケジュールを作成する)
-        self.school.make_year_schedule(year=self.world_time.current_time.year)
+        self.school.make_year_schedule()
         # 一日の計画を立てる。(一日の計画の更新は自動的ではなく、コマンド：!SLEEP_TILL_TOMORROWのところから始める)
         self.daily_planner.make_daily_plan(datetime=self.world_time.current_time)
         await self.short_term_memory.add("(アイリが今日の予定を立てた。)")

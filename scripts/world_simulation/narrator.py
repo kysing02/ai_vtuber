@@ -1,24 +1,20 @@
-from scripts.sound.play_sound import PlaySound
-from scripts.adapters.vtube_studio_adapter import VTSAdapter
-from scripts.utils.helpers import split_japanese_text
-from scripts.sound.VoiceMaker import StyleBertVits2Adapter, VoicevoxAdapter
 from scripts.adapters.obs_adapter import OBSAdapter
-from scripts.utils.parser import Parser
+from scripts.adapters.vtube_studio_adapter import VTSAdapter
+from scripts.sound.play_sound import PlaySound
+from scripts.sound.VoiceMaker import StyleBertVits2Adapter, VoicevoxAdapter
 from scripts.utils.helpers import split_japanese_text
+from scripts.utils.parser import Parser
 
 class Narrator:
+    """ストリーミング画面に出力する音声、文字列を管理するモジュール。"""
+    
     def __init__(self, vits2: StyleBertVits2Adapter, voicevox: VoicevoxAdapter, 
-                 vts: VTSAdapter, playsound: PlaySound,obs: OBSAdapter):
+                 vts: VTSAdapter, play_sound_narrator: PlaySound, play_sound_airi: PlaySound, obs: OBSAdapter):
         self.vits2 = vits2
         self.voicevox = voicevox
         self.vts = vts
-        # self.playsound = playsound
-        self.playsound2 = PlaySound(output_device_name="Headphones") # Use default output for this
-        self.playsound1 = PlaySound(output_device_name="CABLE Input")
-
-        # self.playsound2 = PlaySound()
-        # self.playsound1 = PlaySound()
-
+        self.play_sound_narrator = play_sound_narrator
+        self.play_sound_airi = play_sound_airi
         self.obs = obs
     
     async def narrate(self, message: str, role: str='info'):
@@ -28,10 +24,10 @@ class Narrator:
         self.obs.set_answer(text_first)
         if role in ['info', 'user']:
             response_voice = self.voicevox.get_voice(text_first)
-            self.playsound2.play_sound(response_voice)
+            self.play_sound_narrator.play_sound(response_voice)
         else:
             response_voice = self.vits2.get_voice(text_first)
-            self.playsound1.play_sound(response_voice)
+            self.play_sound_airi.play_sound(response_voice)
         if token and self.vts is not None:
             for _, expression in self.vts.hotkeys.items():
                 if expression == token:
@@ -41,8 +37,8 @@ class Narrator:
             self.obs.set_answer(text)
             if role in ['info', 'user']:
                 response_voice = self.voicevox.get_voice(text)
-                self.playsound2.play_sound(response_voice)
+                self.play_sound_narrator.play_sound(response_voice)
             else:
                 response_voice = self.vits2.get_voice(text)
-                self.playsound1.play_sound(response_voice)
+                self.play_sound_airi.play_sound(response_voice)
         

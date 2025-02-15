@@ -8,6 +8,7 @@ class Queries:
     PREDEFINED_QUERIES = [
         "PROFILE",
         "SCHOOL_EVENTS",
+        "SCHOOL_EVENT_TODAY",
         "TIMETABLE"
         "LONG_TERM_MEMORY",
         "SHORT_TERM_MEMORY",
@@ -27,6 +28,7 @@ class Queries:
         replacements = {
             "!PROFILE": self.vlife.get_profile,
             "!SCHOOL_EVENTS": self.vlife.school.get_school_events_str,
+            "!SCHOOL_EVENT_TODAY": self.vlife.school.get_school_event_today_str,
             "!TIMETABLE": self.vlife.school.get_timetable_str,
             "!LONG_TERM_MEMORY": "Past Memory",
             "!SHORT_TERM_MEMORY": lambda: self.vlife.short_term_memory.get_short_term_memory_str(10),
@@ -47,12 +49,3 @@ class Queries:
         prompt_template = FileManager.read(prompt_path)
         prompt = self.parse(prompt_template)
         return prompt
-    
-    @staticmethod
-    def load_prompt_template_from_file(self, prompt_path: str):
-        """
-        Warning: This is only for quick debug purpose. Don't use it in real application.
-                (Unless you know what you are doing)
-        """
-        prompt_template = FileManager.read(prompt_path)
-        return prompt_template
