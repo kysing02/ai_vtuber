@@ -1,6 +1,6 @@
 import asyncio
 import logging
-import scripts.utils.helpers as helpers
+import threading
 from dotenv import load_dotenv
 from scripts.adapters.openai_adapter import OpenAIAdapter
 from scripts.adapters.twitter_adapter import TwitterAdapter
@@ -32,7 +32,7 @@ class VLife:
 
         # 使用するモジュールをすべて初期化する
         self.openai_adapter = OpenAIAdapter()
-        self.world_time = WorldTime(adapter=self.openai_adapter)
+        self.world_time = WorldTime(adapter=self.openai_adapter, loop=asyncio.get_running_loop())
         self.school = School(world_time=self.world_time, adapter=self.openai_adapter)
         self.obs = OBSAdapter()
         self.vits2 = StyleBertVits2Adapter()
@@ -74,6 +74,9 @@ class VLife:
         await self.discord.wait_until_ready()
         # VTube Studioの接続と認証を行う
         await self.vts.connect_auth()
+
+        # WorldTimeの時間進行スレッドを開始する
+        proceed_time_thread = threading.Thread(target=self.world_time.proceed_time_in_background, daemon=True).start()
 
         # 年間スケジュールを作成する。(4月1日になったら自動的に新しいスケジュールを作成する)
         self.school.make_year_schedule(year=self.world_time.current_time.year)

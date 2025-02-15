@@ -11,7 +11,7 @@
 #
 {!MEMO_APP}
 #
-{!DATETIME}
+{!DATE} {!TIME}
 #
 {!SHORT_TERM_MEMORY}
 #

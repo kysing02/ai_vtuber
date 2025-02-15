@@ -7,6 +7,7 @@ from file_manager import FileManager, FilePath
 import logging
 
 class TimeTable(BaseModel):
+    """時間割を記録するためのクラス。月曜日から金曜日までを記録する。"""
     monday: list[str]
     tuesday: list[str]
     wednesday: list[str]
@@ -14,99 +15,70 @@ class TimeTable(BaseModel):
     friday: list[str]
 
 class SchoolEvent(BaseModel):
+    """学校の行事を記録するためのクラス。何月何日、それから行事の名前を記録する。"""
     month: int
     day: int
     description: str
 
 class SchoolEvents(BaseModel):
+    """学校の行事表を記録する。"""
     events: list[SchoolEvent]
 
 class School:
+    """
+    学校に関することを管理するモジュール。
+    主に年間スケジュールと時間割の生成、保存、取得を管理する。
+    """
+    
     def __init__(self, world_time: WorldTime, adapter: OpenAIAdapter):
         self.world_time = world_time
         self.adapter = adapter
 
     def make_year_schedule(self, year: int):
-        next_year_schedule = CallbackSchedule(datetime=datetime(self.world_time.current_time.year + 1, 4, 1, 0, 0), 
-                                              callback=lambda : self.make_year_schedule(self.world_time.current_time.year + 1))
-        self.world_time.callback_schedules.append(next_year_schedule)
+        """
+        年間学校行事表と時間割を生成する。既存するものがあれば処理がスキップされる。
+        来年度からのスケジュールも自動的に作成されるようになる。
+
+        Args:
+            year (int): 何年度の学校行事表と時間割を生成するか
+        """
+
+        # 来年のスケジュールも4月1日になったらまた自動的に作成する
+        self.world_time.add_timer(datetime=datetime(self.world_time.current_time.year + 1, 4, 1, 0, 0),
+                                  callback=lambda : self.make_year_schedule(self.world_time.current_time.year + 1))
 
         events_file_path = FilePath.JSON_SCHOOL_EVENTS.format(year=year)
         timetable_file_path = FilePath.JSON_TIMETABLE.format(year=year)
+
         if FileManager.exist(events_file_path) and FileManager.exist(timetable_file_path):
             logging.info("年間スケジュールと時間割が既に存在しているため再生成しない。")
             return
 
         # プロンプトチェイン１：高校の行事を生成
-        system_message = """
-        一年内、何月何日も含めて、日本での高校の行事を作成してください。 
-        面白いイベントも入れてください。ただし、日本高校で行われそうなものに限る。（例：文化祭など）
-        行事だけでいいです。他の説明は要らない。
-        例：
-        4月1日 入学式
-        4月25日 クラブ活動紹介
-        5月15日 遠足（行き先：近くの公園）
-        6月1日 中間試験
-        6月15日 体育祭（競技：リレー、玉入れなど）
-        7月5日 学校見学会（新入生対象）
-        7月20日 夏休み前の集会
-        8月25日 夏休み明け集会
-        9月10日 文化祭準備開始
-        9月30日 文化祭
-        10月15日 秋の遠足（行き先：歴史的な名所）
-        11月1日 期末試験
-        11月15日 学校公開日
-        12月5日 音楽発表会
-        12月20日 冬休み前の集会
-        1月10日 冬休み明け集会
-        1月25日 スポーツ大会（各種競技）
-        2月5日 卒業式リハーサル
-        3月1日 卒業式
-        3月15日 新入生オリエンテーション
-        3月25日 学年末試験
-        """.strip()
-
-        messages = [self.adapter.create_message("system", system_message),
+        school_event_prompt = FileManager.read(FilePath.PROMPT_SCHOOL_EVENT_1)
+        messages = [self.adapter.create_message("system", school_event_prompt),
                     self.adapter.create_message("user", f"{year}年の行事：")]
-        year_schedule_draft = self.adapter.chat_completions(messages)
+        school_event_draft = self.adapter.chat_completions(messages)
+
         # プロンプトチェイン２：休みも入れた高校行事を生成
-        system_message = """
-        与えられた日本の高校の行事表に、日本の祝日を入れてください。
-        4月1日から3月31日までの順番で並べてください。
-        行事だけでいいです。他の説明は要らない。
-        例：
-        2024年の行事：
-        4月1日 入学式
-        4月25日 クラブ活動紹介
-        5月15日 遠足（行き先：近くの公園）
-        ...(省略)...
-        3月25日 学年末試験
-        """.strip()
+        school_event_prompt = FileManager.read(FilePath.PROMPT_SCHOOL_EVENT_2)
+        messages = [self.adapter.create_message("system", school_event_prompt),
+                    self.adapter.create_message("user", f"{year}年の行事：\n" + school_event_draft)]
+        school_events = self.adapter.create_structured_output(messages, SchoolEvents)
+        FileManager.write_json(events_file_path, school_events)
 
-        messages = [self.adapter.create_message("assistant", system_message),
-                    self.adapter.create_message("user", f"{year}年の行事：\n" + year_schedule_draft)]
-        year_schedule = self.adapter.create_structured_output(messages, SchoolEvents)
-        FileManager.write_json(events_file_path, year_schedule)
-
-        logging.info(f"{year}年のスケジュールが生成された")
+        logging.info(f"{year}年のスケジュールが生成された。")
 
         # 学校の時間割を生成
-        system_message = """
-        あなたは日本のある高校の管理部に所属しています。
-        その高校のあるクラスのために、時間割を作成してください。
-        ただし、以下のルールに従ってください。
-        - 毎日は4コマがある
-        - 昼休みは無視してください
-        - 曖昧な科目を入れない（選択科目など）
-        """
-        messages = [self.adapter.create_message("system", system_message), 
+        timetable_prompt = FileManager.read(FilePath.PROMPT_SCHOOL_TIMETABLE)
+        messages = [self.adapter.create_message("system", timetable_prompt), 
                     self.adapter.create_message("user", f"{year}年の時間割:\n")]
         timetable = self.adapter.create_structured_output(messages, TimeTable)
         FileManager.write_json(timetable_file_path, timetable)
 
-        logging.info(f"{year}年の学校の時間割が生成された")
+        logging.info(f"{year}年の学校の時間割が生成された。")
     
-    def get_timetable_str(self, year: int=None, weekday: int=None) -> str:
+    def get_timetable_str(self, year: int=None, weekday: int=None):
         if not year or not weekday:
             year = self.world_time.current_time.year
             weekday = self.world_time.current_time.weekday()

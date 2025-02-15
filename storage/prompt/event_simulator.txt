@@ -42,4 +42,4 @@
 
 #
 
-{!DATETIME}
+{!DATE} {!TIME}

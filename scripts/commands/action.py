@@ -178,7 +178,7 @@ class ActCheckDateTime(Action):
     description = "今の時間と日付を確認する"
     async def execute(self):
         await self.short_term_memory.add("アイリが今の時間と日付を調べた：")
-        await self.short_term_memory.add(self.vlife.world_time.get_time_str(), narrate=False)
+        await self.short_term_memory.add(self.vlife.world_time.get_date_str(), narrate=False)
 
 class ActSleepTillTomorrow(Action):
     name = "!SLEEP_TILL_TOMORROW"
