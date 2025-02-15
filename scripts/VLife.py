@@ -1,7 +1,7 @@
-# VLifeシステムの実装
 import asyncio
-from dotenv import load_dotenv
+import logging
 import scripts.utils.helpers as helpers
+from dotenv import load_dotenv
 from scripts.adapters.openai_adapter import OpenAIAdapter
 from scripts.adapters.twitter_adapter import TwitterAdapter
 from scripts.adapters.hatena_entry_adapter import HatenaEntryAdapter
@@ -22,11 +22,15 @@ from scripts.world_simulation.world_time import WorldTime
 from scripts.world_simulation.school import School
 from scripts.world_simulation.daily_planner import DailyPlanner
 from scripts.world_simulation.narrator import Narrator
-import logging
 
 class VLife:
+    """VLifeシステムの実装を行う。ここはプログラムのエントリーポイントになっている。
+    """
     def __init__(self):
+        # TODO Config設定ファイルをロードする
         # self.config = helpers.load_config("config.yaml")
+
+        # 使用するモジュールをすべて初期化する
         self.openai_adapter = OpenAIAdapter()
         self.world_time = WorldTime(adapter=self.openai_adapter)
         self.school = School(world_time=self.world_time, adapter=self.openai_adapter)
@@ -58,30 +62,55 @@ class VLife:
             vts=self.vts
         )
         self.discord = DiscordBot(self.voice_chat, self.openai_adapter, self.short_term_memory, self.action_manager)
-        self.discord.run_bot_in_thread()
 
     async def start(self):
-        logging.basicConfig(level=logging.INFO)
+        """
+        初期状態を設定し、VLifeシステムを開始する。
+        ここではすべてのループとタスクを管理する。
+        """
+        # Discordの接続と認証を行う
+        discord_task = asyncio.create_task(self.discord.connect_auth())
+        # Discordが準備完了の状態まで待つ
+        await self.discord.wait_until_ready()
+        # VTube Studioの接続と認証を行う
         await self.vts.connect_auth()
-        # 年間スケジュールを作成する。4月1日になったら自動的に新しいスケジュールを作成する
+
+        # 年間スケジュールを作成する。(4月1日になったら自動的に新しいスケジュールを作成する)
         self.school.make_year_schedule(year=self.world_time.current_time.year)
-        # 一日の計画を立てる。一日の計画の更新は自動的ではなく、コマンド：起きるところから始める
+        # 一日の計画を立てる。(一日の計画の更新は自動的ではなく、コマンド：!SLEEP_TILL_TOMORROWのところから始める)
         self.daily_planner.make_daily_plan(datetime=self.world_time.current_time)
         await self.short_term_memory.add("(アイリが今日の予定を立てた。)")
+
         # システムを開始
         while True:
             await self.action_manager.take_action()
-            await asyncio.sleep(0.1)  # Add a small delay to avoid busy-waiting
+            await asyncio.sleep(0.1)  # 無限待機を避けるために少し遅延を設定する
 
     @staticmethod
     def get_profile():
+        """
+        AIriに関するプロフィールを取得する。
+
+        Returns:
+            str: AIriのプロフィール
+        """
         profile = FileManager.read(FilePath.TEXT_PROFILE)
         return profile
 
 async def main():
+    # システム環境変数を読み込む
     load_dotenv()
+
+    # ログレベルをINFOにする
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s | %(levelname)-6s | %(filename)s:%(lineno)d | %(message)s",
+        datefmt="%m-%d %H:%M:%S"
+    )
+
+    # VLifeシステムを開始する
     vlife = VLife()
     await vlife.start()
 
 if __name__ == "__main__":
-    asyncio.run(main())  # Use
+    asyncio.run(main())

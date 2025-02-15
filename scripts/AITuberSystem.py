@@ -8,7 +8,9 @@ from dotenv import load_dotenv
 import time
 load_dotenv(override=True)
 
-
+# 注：このクラスはVLifeシステムに使用されていない。
+# 参考書籍：「AITuberを作ってみたらプロンプトエンジニアリングがよくわかった件 - 阿部由延」
+# TODO: ある程度VLifeシステムのストリーミング状況が整ったら、このクラスを`Narrator`クラスに移行する。
 class AITuberSystem:
     def __init__(self):
         self.talker = Talker()

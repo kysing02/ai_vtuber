@@ -28,7 +28,7 @@ class VTSAdapter:
         self.loop = asyncio.get_event_loop()
 
     async def connect_auth(self):
-        """Connect to VTube Studio and authenticate."""
+        """VTube Studioの接続と認証を行う。"""
         if await self.__connect():
             if await self.__authenticate():
                 return True

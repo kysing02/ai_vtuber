@@ -1,8 +1,8 @@
-import requests
 from requests.auth import HTTPBasicAuth
+from xml.etree.ElementTree import Element, SubElement, tostring
+import requests
 import dotenv
 import os
-from xml.etree.ElementTree import Element, SubElement, tostring
 import logging
 
 dotenv.load_dotenv()

@@ -1,22 +1,14 @@
-# bot.py
 import os
-import subprocess
-import tempfile
-import wave
 import discord
 import asyncio
-import threading
 import logging
-from discord.ext import commands
-from discord.message import Message
-from discord.member import Member
-from discord import PCMVolumeTransformer, FFmpegPCMAudio
 from dotenv import load_dotenv
-from scripts.sound.voice_chat import VoiceChat
+from discord.message import Message
 from scripts.adapters.vtube_studio_adapter import VTSAdapter
 from scripts.adapters.openai_adapter import OpenAIAdapter
-from scripts.memory.memory import ShortTermMemory
 from scripts.commands.action_manager import ActionManager
+from scripts.memory.memory import ShortTermMemory
+from scripts.sound.voice_chat import VoiceChat
 from scripts.world_simulation.messenger import Messenger
 
 class DiscordBot:
@@ -30,7 +22,6 @@ class DiscordBot:
 
         # Initialize the client
         self.client = discord.Client(intents=intents)
-
         # To pass to the messenger
         self.voice_chat = voice_chat
         self.adapter = adapter
@@ -45,11 +36,24 @@ class DiscordBot:
         self.client.event(self.on_message)
         
         self.task_future = None
+        self.messenger = Messenger(self.voice_chat, self.adapter, self.short_term_memory, self.action_manager)
+
+    async def connect_auth(self):
+        """
+        Discordの接続と認証を行う。
+        これはブロッキング処理なので、バックグラウンド処理にする必要がある。
+        """
+        async with self.client:
+            await self.client.start(self.token)
+
+    async def wait_until_ready(self):
+        """Discordのon_readyイベントが完了するまで待つ
+        """
+        while not self.client.is_ready():
+            await asyncio.sleep(1)
 
     async def on_ready(self):
         self.task_future = asyncio.Future()
-        # Initialize messenger class
-        self.messenger = Messenger(self.voice_chat, self.adapter, self.short_term_memory, self.action_manager)
 
         logging.info(f'{self.client.user} has connected to Discord!')
         self.messenger.user = self.client.user
@@ -117,13 +121,6 @@ class DiscordBot:
     #     await member.create_dm()
     #     await member.dm_channel.send(f'Hi {member.name}, welcome to my Discord server!')
 
-    def run_bot(self):
-        self.client.run(self.token)
-
-    def run_bot_in_thread(self):
-        bot_thread = threading.Thread(target=self.run_bot, daemon=True)
-        bot_thread.start()
-
     def schedule_task(self, coro):
         """Safely schedule a coroutine in the bot's event loop."""
         return asyncio.run_coroutine_threadsafe(coro, self.client.loop)
@@ -144,7 +141,8 @@ if __name__ == "__main__":
             vts=vts
         )
         bot = DiscordBot(voice_chat, adapter, None, None)
-        bot.run_bot_in_thread()
+        asyncio.create_task(bot.connect_auth())
+        asyncio.run(bot.wait_until_ready())
         import time
         time.sleep(5)
         bot.schedule_task(bot.send_dm("こんにちはー"))
