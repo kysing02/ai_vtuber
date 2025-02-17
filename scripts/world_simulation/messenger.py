@@ -67,7 +67,7 @@ class Messenger:
             # Check for last read message
             last_read_id = contact.last_read_message_id
             
-        await self.memory.add(f"スマホに{self.unread_messages_count}件の通知が来ました：\n[{author_name}]からのメッセージです。[スマホを開く]ことでチェックできます。", narrate=False)
+        self.memory.create_notification(f"スマホに{self.unread_messages_count}件の通知が来ました：\n[{author_name}]からのメッセージです。[スマホを開く]ことでチェックできます。")
         # query = self.action_manager.ask(f"[{author_name}]からの返信が来ました。どうしますか？(10文字程度)")
         # await self.memory.add(query, role='assistant', narrate=False)
         return

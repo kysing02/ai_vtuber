@@ -203,6 +203,7 @@ class ActCheckDeveloperChat(Action):
         messages = await asyncio.wrap_future(future)
         await self.short_term_memory.add(f"アイリがシンとの会話履歴をチェックした。")
         await self.short_term_memory.add(messages, narrate=False)
+        self.short_term_memory.clear_notification()
 
 class ActNew(Action):
     name = "!NEW_ACTION"

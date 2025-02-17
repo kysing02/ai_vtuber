@@ -16,6 +16,15 @@ class MemoryRecord:
         if not skip_embedding:
             self.embedding = adapter.create_embedding(self.message)
 
+    def to_dict(self):
+        """Convert the object to a JSON-serializable dictionary."""
+        return {
+            "memory_time": self.memory_time.isoformat(),  # Convert datetime to string
+            "role": self.role,
+            "message": self.message,
+            "embedding": self.embedding
+        }
+
 class LongTermMemory:
     def __init__(self, adapter: OpenAIAdapter):
         # self.__load_memory_from_file()
@@ -63,7 +72,9 @@ class LongTermMemory:
         top_n_memories = self.get_top_similar_memories(num, text)
         top_n_memories_str = "今のアイリの行動と関係がある昔の記憶：\n"
         for memory in top_n_memories:
-            top_n_memories_str += f"{memory.memory_time.strftime('[%d年%m月%Y日 %H時%M分]')}{memory.message}"
+            top_n_memories_str += f"{memory.memory_time.strftime('[%Y年%m月%d日 %H時%M分]')}{memory.message}"
+        print("[DEBUG]:", top_n_memories_str)
+        return top_n_memories_str
 
     async def process_batch(self, memory_to_process: list[MemoryRecord]):
         # Hint: This might be a process comsuming task. Consider running this in background.
@@ -73,10 +84,10 @@ class LongTermMemory:
         
         # Save embeddings into own memory_list and save to file
         self.memory_list.extend(memory_to_process)
-        FileManager.write_json(FilePath.JSON_LONG_TERM_MEMORY, self.memory_list)
+        FileManager.write_json(FilePath.JSON_LONG_TERM_MEMORY, [item.to_dict() for item in self.memory_list])
 
 class ShortTermMemory:
-    LTM_UPDATE_FREQUENCY = 1   # 何件の新しいことが起きたときに、短期記憶を長期記憶に保存するか
+    LTM_UPDATE_FREQUENCY = 5   # 何件の新しいことが起きたときに、短期記憶を長期記憶に保存するか
     
     def __init__(self, worldtime: WorldTime, long_term_memory: LongTermMemory, adapter: OpenAIAdapter, narrator: Narrator):
         self.memory_list: list[MemoryRecord] = []
@@ -86,6 +97,7 @@ class ShortTermMemory:
         self.adapter = adapter
         self.narrator = narrator
         # self.__load_memory_from_file()
+        self.notification = None # Temporary solution for message ignored bug
 
     def __load_memory_from_file(self):
         raise NotImplementedError
@@ -106,17 +118,28 @@ class ShortTermMemory:
         if role == 'info':
             role = 'user'
             message = "[INFO]" + message
-        self.memory_list_gpt.append(self.adapter.create_message(role, f"[{self.worldtime.get_time_str()}] {message}"))
-        # if len(self.memory_list) % 40 == 0 and len(self.memory_list) > 0:
-        #     loop = asyncio.get_running_loop()
-        #     loop.run_until_complete(asyncio.to_thread(self.long_term_memory.process_batch, self.memory_list[-40:]))
+        self.memory_list_gpt.append(self.adapter.create_message(role, f"{message}")) # TODO Temporarily removed time
+        # if len(self.memory_list) % ShortTermMemory.LTM_UPDATE_FREQUENCY == 0 and len(self.memory_list) > 0:
+        #     asyncio.create_task(self.long_term_memory.process_batch(self.memory_list[-10:]))
+
+    def create_notification(self, message:str):
+        memory_time = self.worldtime.current_time
+        self.notification = MemoryRecord(memory_time=memory_time, role='info', message=message, adapter=self.adapter, skip_embedding=True)
+
+    def clear_notification(self):
+        self.notification = None
 
     def get_short_term_memory(self, num: int):
-        return self.memory_list_gpt[-num: ]
+        memory_list_gpt = self.memory_list_gpt[-num: ]
+        if isinstance(self.notification, MemoryRecord):
+            memory_list_gpt.append(self.adapter.create_message(role='user', content=self.notification.message))
+        return memory_list_gpt
 
     def get_short_term_memory_str(self, num: int):
         retrieved_memory = self.memory_list[-num:]
         retrieved_memory_str = "アイリが直近にあったことの詳細："
         for record in retrieved_memory:
             retrieved_memory_str += f"\n[{record.memory_time}] {record.message}"
+        if isinstance(self.notification, MemoryRecord):
+            retrieved_memory_str += f"\n[{self.notification.memory_time}] {self.notification.message}"
         return retrieved_memory_str

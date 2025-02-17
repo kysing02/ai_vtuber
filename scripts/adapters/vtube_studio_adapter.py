@@ -105,17 +105,18 @@ class VTSAdapter:
         self.heartbeat_running = True
         while self.authenticated and self.heartbeat_running:
             try:
-                heartbeat_request = {
-                    "apiName": "VTubeStudioPublicAPI",
-                    "apiVersion": "1.0",
-                    "messageType": "CurrentModelRequest",
-                    "data": {}
-                }
-                await self.ws.send(json.dumps(heartbeat_request))
-                async with self.recv_lock:  # Use the lock to ensure exclusive access to recv()
-                    await self.ws.recv()
-                logging.info("Heartbeat sent.")
-                await asyncio.sleep(1)  # 10秒ごとに送信
+                await self.ws.ping()
+                # heartbeat_request = {
+                #     "apiName": "VTubeStudioPublicAPI",
+                #     "apiVersion": "1.0",
+                #     "messageType": "CurrentModelRequest",
+                #     "data": {}
+                # }
+                # await self.ws.send(json.dumps(heartbeat_request))
+                # async with self.recv_lock:  # Use the lock to ensure exclusive access to recv()
+                #     await self.ws.recv()
+                # logging.info("Heartbeat sent.")
+                await asyncio.sleep(5)  # 5秒ごとに送信
             except Exception as e:
                 logging.error(f"Heartbeat failed: {e}")
                 self.heartbeat_running = False  # Stop thread

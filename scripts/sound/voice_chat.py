@@ -127,7 +127,7 @@ class VoiceChat:
                             self.play_sound.play_sound(response_voice)
                         else:
                             text = response
-                        await self.memory.add(text, role='assistant', narrate=False)
+                        # await self.memory.add(text, role='assistant', narrate=False)
                         
         # except Exception as e:
         #     print("予期せぬエラーが発生した：", e)

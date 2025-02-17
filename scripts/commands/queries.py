@@ -30,7 +30,7 @@ class Queries:
             "!SCHOOL_EVENTS": self.vlife.school.get_school_events_str,
             "!SCHOOL_EVENT_TODAY": self.vlife.school.get_school_event_today_str,
             "!TIMETABLE": self.vlife.school.get_timetable_str,
-            "!LONG_TERM_MEMORY": "Past Memory",
+            # "!LONG_TERM_MEMORY": lambda: self.vlife.long_term_memory.get_top_similar_memories_str(3, self.vlife.short_term_memory.get_short_term_memory_str(1)),
             "!SHORT_TERM_MEMORY": lambda: self.vlife.short_term_memory.get_short_term_memory_str(10),
             "!MEMO_APP": lambda: self.vlife.memo.read_memos_str(5),
             "!DATE": self.vlife.world_time.get_date_str,

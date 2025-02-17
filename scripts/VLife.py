@@ -41,7 +41,7 @@ class VLife:
         self.play_sound_airi = PlaySound(output_device_name="CABLE Input")
         self.vts = VTSAdapter()
         self.long_term_memory = LongTermMemory(self.openai_adapter)
-        self.narrator = Narrator(self.vits2, self.voicevox, self.vts, self.play_sound, self.obs)
+        self.narrator = Narrator(self.vits2, self.voicevox, self.vts, self.play_sound_narrator, self.play_sound_airi, self.obs)
         self.short_term_memory = ShortTermMemory(self.world_time, self.long_term_memory, self.openai_adapter, self.narrator)
         self.twitter_adapter = TwitterAdapter()
         self.hatena_entry_adapter = HatenaEntryAdapter()

@@ -41,7 +41,7 @@ def main():
     # Definitely do this, dynamic energy compensation lowers the energy threshold dramatically to a point where the SpeechRecognizer never stops recording.
     recorder.dynamic_energy_threshold = False
     # Ignore empty string or weird output
-    ignore_messages = ["ご視聴ありがとうございました", "", "ご視聴ありがとうございました。"]
+    ignore_messages = ["ご視聴ありがとうございました", "", "ご視聴ありがとうございました。", "おやすみなさい", "ご視聴ありがとうございました!"]
 
     # Important for linux users.
     # Prevents permanent application hang and crash by using the wrong Microphone

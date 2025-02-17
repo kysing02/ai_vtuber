@@ -14,7 +14,7 @@ class FilePath:
     TEXT_MEMO = "storage/airi/memo.txt"
     TEXT_PROFILE = "storage/airi/profile.txt"
     TEXT_TIMETABLE_TEMPLATE = "storage/year_schedule/school_timetable_template.txt"
-    JSON_LONG_TERM_MEMORY = "storage/airi/memory/long_term_memory.txt"
+    JSON_LONG_TERM_MEMORY = "storage/memory/long_term_memory.json"
     JSON_SCHOOL_EVENTS = "storage/year_schedule/school_events_{year}.json"
     JSON_TIMETABLE = "storage/year_schedule/school_timetable_{year}.json"
     PROMPT_ACT = "storage/prompt/act.txt"
@@ -89,7 +89,7 @@ class FileManager:
             if isinstance(json_file, BaseModel):
                 file.write(json_file.model_dump_json(indent=indent))
             else:
-                file.write(json.dumps(json_file, indent=indent))
+                file.write(json.dumps(json_file, indent=indent, ensure_ascii=False))
 
     @staticmethod
     def exist(file_path: str):
