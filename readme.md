@@ -91,8 +91,10 @@ VTube Studioを初回使うとき，最初に一回Authentication Tokenを取得
 
 ### 7. VTube Studioのセットアップ
 
-VTube Studioを使うには，Hotkeyをいくつか設定する必要がある．具体的には，以下のように設定した．
+VTube Studioを使うには，Hotkeyをいくつか設定する必要がある．
+まず，`assets\vts_studio_expression`から5つのファイルを，VTube Studioのモデル管理の画面を開いて，hiyoriのファイルに入れてください．
 
+具体的には，以下のように設定した．
 
 それから，リップシンク（口パク）のために，以下のように設定しておく必要がある．より詳しい設定は論文15ページ目を参照する．
 ![VTube Studio Mic](/readme-img/vtube-studio-mic.png)

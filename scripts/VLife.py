@@ -37,7 +37,7 @@ class VLife:
         self.obs = OBSAdapter()
         self.vits2 = StyleBertVits2Adapter()
         self.voicevox = VoicevoxAdapter()
-        self.play_sound_narrator = PlaySound(output_device_name="スピーカー")
+        self.play_sound_narrator = PlaySound(output_device_name="Headphones")
         self.play_sound_airi = PlaySound(output_device_name="CABLE Input")
         self.vts = VTSAdapter()
         self.long_term_memory = LongTermMemory(self.openai_adapter)
